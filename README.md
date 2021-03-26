@@ -1,19 +1,5 @@
 ---
-products:
-- azure
-- aspnet
-- azure-application-insights
-- azure-app-service
-- azure-blob-storage
-- azure-storage-accounts
-- azure-sql
-- azure-cache-for-redis
-- azure-database
-- azure-functions
-- azure-log-analytics
-- azure-nat-gateway
-- azure-virtual-machines
-- vs-code
+products: azure,  aspnet, azure-application-insights, azure-app-service, azure-blob-storage, azure-storage-accounts, azure-sql, azure-cache-for-redis, azure-database, azure-functions, azure-log-analytics, azure-nat-gateway, azure-virtual-machines, vs-code
 ---
 
 # How to configure a Web App to call Azure Cache for Redis and Azure SQL Database via Private Endpoints
