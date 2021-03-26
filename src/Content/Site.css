@@ -1,0 +1,183 @@
+﻿/* Reset and define common styles */
+* { box-sizing: border-box; -moz-box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, Helvetica; background: #ffffff url(../images/sky.png) 0 0 repeat-x;}
+button {
+     border: 1px solid #88a0f4; 
+     color: white; 
+     background-color: #b9c9fe; 
+     float: right; 
+     margin-left: 10px; 
+     padding: 0 10px; 
+     border-radius: 4px;
+     width: 68px
+}
+button:hover { background-color: white; color: #88a0f4; }
+input[type=text], input:not([type]) { padding: 0 10px; text-overflow: ellipsis; }
+
+/* Main page structure and masthead style */
+#wrapper { max-width: 800px; margin: auto; padding: 24px; }
+article {
+    background-color: white;
+    box-shadow: 0 0 12px #000000;
+    box-shadow: 0 0 12px rgba(0, 0, 0, 0.75); border-radius: 10px;
+}
+
+header { background-color: #FFFFFF; padding: 20px; border-top-left-radius: 10px; border-top-right-radius: 10px; }
+header h1 {
+    text-transform: uppercase; 
+    font-weight: normal; 
+    font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+    font-size: 14px;
+    margin: auto;
+    color: #88a0f4;
+    margin-bottom: 5px;
+}
+
+h2 { text-transform: uppercase; font-weight: normal; color: white; font-size: 20px; }
+#summary { text-align: center; font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;font-size: 13px; padding: 8px 0; }
+#author { text-align: center; font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;font-size: 13px; padding: 8px 0; }
+
+/* "Add new" form */
+#add-product table tbody tr td 
+{
+    font-weight: normal;
+	font-size: 13px;
+	color: #88a0f4;
+    text-align: left;
+    height: 30px;
+    padding: 0;
+}
+#add-product button { float: right; margin-top: 10px; padding: 0 10px; height: 24px; border-radius: 4px; }
+#add-product input { width: 610px; height: 24px; border: 1px solid #DDDDDD; font-size: 1em; border-radius: 4px; margin-left: 10px;}
+#add-product-headline {
+    font-family: Arial, Helvetica;
+    margin-top: 5px;
+    margin-bottom: 10px; 
+    font-weight: normal; 
+    font-size: 13px;
+}
+
+#refresh-products {width: 710px;margin: auto}
+
+#refresh-products button { 
+    float: right; 
+    margin-left: 10px; 
+    padding: 0 10px; 
+    height: 24px; 
+    border-radius: 4px; 
+}
+.product-header { width: 100px;}
+
+.button-update {margin: 0;height: 24px; }
+.button-delete {margin: 0;height: 24px; }
+.button-refresh {margin: 0;height: 24px; margin-top: 10px}
+
+/* Textboxes in list of products */
+.product-text { width: 100%; height: 24px;line-height: 24px; border: 1px solid transparent; background-color: transparent; border-radius: 4px;}
+.product-text:focus, .product-text:hover { border-color: #aaa; background-color: #FFC; }
+
+/* Footer */
+footer { text-align: center; font-size: 0.8em; margin-top: 20px; }
+footer a { color: #666; display: block; }
+#errorlog { color: red; font-weight: bold; padding: 8px; display: inline-block; text-align: left; }
+
+#new-product
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+	margin: auto;
+	text-align: left;
+	border-collapse: collapse;
+    width: 710px;
+}
+
+#products
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+	margin: auto;
+	text-align: left;
+	border-collapse: collapse;
+    width: 710px;
+}
+#products thead th.rounded-upper-left
+{
+	background: #b9c9fe url('../images/left.png') left -1px no-repeat;
+}
+#products thead th.rounded-upper-right
+{
+	background: #b9c9fe url('../images/right.png') right -1px no-repeat;
+}
+#products th
+{
+	padding: 8px;
+	font-weight: normal;
+	font-size: 13px;
+	color: white;
+	background: #b9c9fe;
+    text-align: left;
+    height: 24px;
+}
+#products th span 
+{
+    margin-left: 10px;
+}
+#products td
+{
+	padding: 8px;
+	background: #e8edff;
+	border-top: 1px solid #fff;
+	color: #669;
+    height: 24px;
+}
+#products td button
+{
+    margin-right: 10px;
+}
+#products tfoot td.rounded-foot-left
+{
+	background: #e8edff url('../images/botleft.png') left bottom no-repeat;
+}
+#products tfoot td.rounded-foot-right
+{
+	background: #e8edff url('../images/botright.png') right bottom no-repeat;
+}
+#products tbody tr:hover td
+{
+	background: #d0dafd;
+}
+#title-image {margin-bottom: 20px}
+.stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    min-width: 900px;
+    height: 100%;
+    overflow: hidden;
+    z-index: 100;
+}
+.far-clouds { background: transparent url(../images/far-clouds.png) 305px 102px repeat-x; }
+.near-clouds { background: transparent url(../images/near-clouds.png) 305px 300px repeat-x; }
+.mainContent{
+    position: relative;
+    z-index: 101;
+}
+.container  {
+	min-width:900px;
+	padding-top:359px;
+	position:relative;
+	width:100%;
+}
+
+#select-repository tbody tr td 
+{
+    font-weight: normal;
+	font-size: 13px;
+	color: #88a0f4;
+    text-align: left;
+    height: 30px;
+    padding: 0;
+}
+
+#select-repository select { width: 150px; height: 24px; border: 1px solid #DDDDDD; font-size: 1em; border-radius: 4px;}

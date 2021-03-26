@@ -1,0 +1,75 @@
+﻿
+<div id='wrapper'>
+    <div id="far-clouds1" class="far-clouds stage"></div>
+    <div id="near-clouds1" class="near-clouds stage"></div>
+    <div id="far-clouds2" class="far-clouds stage"></div>
+    <div id="near-clouds2" class="near-clouds stage"></div>
+    <div class="mainContent">
+        <article>
+            <header>
+                <img id="title-image" src="@Url.Content("~/Images/title.png")" alt="Title"/>
+                <h1>Enter a new product</h1>
+                <form id='add-product'>
+                    <table id="new-product">
+                        <tbody>
+                            <tr>
+                                <td class="product-header">Name</td>
+                                <td><input type='text' id='product-name' placeholder='Enter product name' /></td>
+                            </tr>
+                            <tr>
+                                <td class="product-header">Category</td>
+                                <td><input type='text' id='product-category' placeholder='Enter product category' /></td>
+                            </tr>
+                            <tr>
+                                <td class="product-header">Price</td>
+                                <td><input type='text' id='product-price' placeholder='Enter product price' /></td>
+                            </tr>
+                            <tr>
+                                <td colspan="2"><button type='submit'>Add</button></td>
+                            </tr>
+                        </tbody>
+                    </table>    
+                </form>
+                <h1>Products</h1>
+                <table id='products'>
+                    <thead>
+                        <tr>
+                            <th class="rounded-upper-left" style="width: 70px"><span>ProductId</span></th>
+                            <th><span>Name</span></th>
+                            <th><span>Category</span></th>
+                            <th style="width: 100px"><span>Price</span></th>
+                            <th style="width: 70px"><span></span></th>
+                            <th class="rounded-upper-right" style="width: 70px"></th>
+                        </tr>
+                    </thead>
+                    <tbody/>
+                    <tfoot>
+                        <tr>
+                            <td class="rounded-foot-left">&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td>&nbsp;</td>
+                            <td class="rounded-foot-right">&nbsp;</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <table id="refresh-products">
+                    <tbody>
+                        <tr>
+                            <td><button class="button-refresh" type='submit'>Refresh</button></td>
+                        </tr>
+                    </tbody>
+                </table>   
+            </header>
+            <p id='summary'>Loading...</p>
+            <p id='author'><strong>Author:</strong> Paolo Salvatori (@@babosbird)</p>
+        </article>
+    </div>
+    <footer>
+        <ul id='errorlog'></ul>
+    </footer>
+</div>
+<script src='https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.9.1.min.js'></script>
+<script src='@Url.Content("~/Scripts/jquery.spritely-0.6.js")'></script>
+<script src='@Url.Content("~/Scripts/page.js")'></script>

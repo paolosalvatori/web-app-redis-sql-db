@@ -1,0 +1,104 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "webAppName": {
+      "value": "WebAppSqlDbRedisInVnet"
+    },
+    "hostingPlanName": {
+      "value": "WebAppSqlDbRedisInVnetServicePlan"
+    },
+    "workspaceName": {
+      "value": "WebAppSqlDbRedisInVnetLogAnalytics"
+    },
+    "workspaceSku": {
+      "value": "PerGB2018"
+    },
+    "virtualNetworkName": {
+      "value": "WebAppSqlDbRedisInVnetVNet"
+    },
+    "virtualNetworkAddressPrefix": {
+      "value": "10.0.0.0/16"
+    },
+    "webAppSubnetName": {
+      "value": "WebAppSubnet"
+    },
+    "privateEndpointSubnetName": {
+      "value": "PrivateEndpointSubnet"
+    },
+    "virtualMachineSubnetName": {
+      "value": "VirtualMachineSubnet"
+    },
+    "bastionSubnetName": {
+      "value": "AzureBastionSubnet"
+    },
+    "webAppSubnetAddressPrefix": {
+      "value": "10.0.0.0/24"
+    },
+    "privateEndpointSubnetAddressPrefix": {
+      "value": "10.0.1.0/24"
+    },
+    "virtualMachineSubnetAddressPrefix": {
+      "value": "10.0.2.0/24"
+    },
+    "bastionSubnetAddressPrefix": {
+      "value": "10.0.3.0/27"
+    },
+    "vmName": {
+      "value": "TestVm"
+    },
+    "vmSize": {
+      "value": "Standard_F4s_v2"
+    },
+    "imagePublisher": {
+      "value": "MicrosoftWindowsDesktop"
+    },
+    "imageOffer": {
+      "value": "Windows-10"
+    },
+    "imageSku": {
+      "value": "rs5-pro"
+    },
+    "adminUsername": {
+      "value": "azadmin"
+    },
+    "adminPasswordOrKey": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/1a45a694-ae23-4650-9774-89a571c462f6/resourceGroups/BaboKeyVaultResourceGroup/providers/Microsoft.KeyVault/vaults/BaboKeyVault"
+        },
+        "secretName": "vmAdminPasswordOrKey"
+      }
+    },
+    "diskStorageAccounType": {
+      "value": "Premium_LRS"
+    },
+    "numDataDisks": {
+      "value": 1
+    },
+    "osDiskSize": {
+      "value": 127
+    },
+    "dataDiskSize": {
+      "value": 50
+    },
+    "dataDiskCaching": {
+      "value": "ReadWrite"
+    },
+    "sqlServerName": {
+      "value": "WebAppSqlDbRedisInVnetDB"
+    },
+    "sqlServerAdministratorName": {
+      "value": "Paolos"
+    },
+    "sqlServerAdministratorPassword": {
+      "value": "Trustno1"
+    },
+    "sqlServerDatabaseName": {
+      "value": "ProductsDB"
+    },
+    "redisCacheName": {
+      "value": "ProductsDBCacheInVnet"
+    }
+  }
+}

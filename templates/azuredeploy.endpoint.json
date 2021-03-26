@@ -1,0 +1,1966 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "webAppName": {
+      "type": "string",
+      "defaultValue": "[concat('webapp', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "Specifies the name of the Web App."
+      }
+    },
+    "hostingPlanName": {
+      "type": "string",
+      "defaultValue": "[concat(parameters('webAppName'), 'HostingPlan')]",
+      "metadata": {
+        "description": "Specifies the name of the hosting plan."
+      }
+    },
+    "hostingPlanSkuName": {
+      "type": "string",
+      "defaultValue": "P1v3",
+      "allowedValues": [
+        "P1v2",
+        "P2v2",
+        "P3v2",
+        "P1v3",
+        "P2v3",
+        "P3v3",
+        "I1",
+        "I2",
+        "I3"
+      ],
+      "metadata": {
+        "description": "Describes plan's pricing tier and instance size. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
+      }
+    },
+    "hostingPlanSkuCapacity": {
+      "type": "int",
+      "defaultValue": 1,
+      "minValue": 1,
+      "metadata": {
+        "description": "Describes plan's instance count"
+      }
+    },
+    "applicationInsightsName": {
+      "type": "string",
+      "defaultValue": "[concat(parameters('webAppName'), 'ApplicationInsights')]",
+      "metadata": {
+        "description": "Specifies the name of the Application Insights used by the Web App."
+      }
+    },
+    "fwebAppContentStorageAccountName": {
+      "type": "string",
+      "defaultValue": "[concat('webapp', uniquestring(resourceGroup().id))]",
+      "metadata": {
+        "description": "Specifies the name of the storage account containing the application code."
+      }
+    },
+    "vmDiagnosticStorageAccountName": {
+      "type": "string",
+      "defaultValue": "[concat('boot', uniquestring(resourceGroup().id))]",
+      "metadata": {
+        "description": "Specifies the name of the storage account used to store the boot diagnostics logs of the virtual machine."
+      }
+    },
+    "vmName": {
+      "type": "string",
+      "defaultValue": "TestVm",
+      "metadata": {
+        "description": "Specifies the name of the virtual machine."
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "defaultValue": "Standard_DS3_v2",
+      "metadata": {
+        "description": "Specifies the size of the virtual machine."
+      }
+    },
+    "imagePublisher": {
+      "type": "string",
+      "defaultValue": "MicrosoftWindowsDesktop",
+      "metadata": {
+        "description": "Specifies the image publisher of the disk image used to create the virtual machine."
+      }
+    },
+    "imageOffer": {
+      "type": "string",
+      "defaultValue": "Windows-10",
+      "metadata": {
+        "description": "Specifies the offer of the platform image or marketplace image used to create the virtual machine."
+      }
+    },
+    "imageSku": {
+      "type": "string",
+      "defaultValue": "rs5-pro",
+      "metadata": {
+        "description": "Specifies the Ubuntu version for the VM. This will pick a fully patched image of this given Ubuntu version."
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "defaultValue": "azadmin",
+      "metadata": {
+        "description": "Specifies the name of the administrator account of the virtual machine."
+      }
+    },
+    "adminPasswordOrKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Specifies the SSH Key or password for the virtual machine. SSH key is recommended."
+      }
+    },
+    "diskStorageAccounType": {
+      "type": "string",
+      "defaultValue": "Premium_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Standard_ZRS",
+        "Premium_LRS",
+        "Premium_ZRS",
+        "Standard_GZRS",
+        "Standard_RAGZRS"
+      ],
+      "metadata": {
+        "description": "Specifies the storage account type for OS and data disk."
+      }
+    },
+    "numDataDisks": {
+      "type": "int",
+      "defaultValue": 1,
+      "minValue": 0,
+      "maxValue": 64,
+      "metadata": {
+        "description": "Specifies the number of data disks of the virtual machine."
+      }
+    },
+    "osDiskSize": {
+      "type": "int",
+      "defaultValue": 127,
+      "metadata": {
+        "description": "Specifies the size in GB of the OS disk of the VM."
+      }
+    },
+    "dataDiskSize": {
+      "type": "int",
+      "defaultValue": 50,
+      "metadata": {
+        "description": "Specifies the size in GB of the OS disk of the virtual machine."
+      }
+    },
+    "dataDiskCaching": {
+      "type": "string",
+      "defaultValue": "ReadWrite",
+      "metadata": {
+        "description": "Specifies the caching requirements for the data disks."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "Specifies the location for all the resources."
+      }
+    },
+    "virtualNetworkName": {
+      "defaultValue": "TestVnet",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the name of the virtual network hosting the virtual machine."
+      }
+    },
+    "virtualNetworkAddressPrefix": {
+      "defaultValue": "10.0.0.0/16",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the address prefix of the virtual network hosting the Web App and other resources."
+      }
+    },
+    "webAppSubnetName": {
+      "defaultValue": "WebAppSubnet",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the name of the subnet hosting the Web App."
+      }
+    },
+    "privateEndpointSubnetName": {
+      "defaultValue": "PrivateEndpointSubnet",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the name of the subnet hosting private endpoints."
+      }
+    },
+    "virtualMachineSubnetName": {
+      "defaultValue": "VirtualMachineSubnet",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the name of the subnet hosting virtual machines."
+      }
+    },
+    "bastionSubnetName": {
+      "defaultValue": "AzureBastionSubnet",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the name of the subnet hosting Azure Bastion."
+      }
+    },
+    "webAppSubnetAddressPrefix": {
+      "defaultValue": "10.0.0.0/24",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the address prefix of the subnet hosting the Web App."
+      }
+    },
+    "privateEndpointSubnetAddressPrefix": {
+      "defaultValue": "10.0.1.0/24",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the address prefix of the subnet hosting private endpoints."
+      }
+    },
+    "virtualMachineSubnetAddressPrefix": {
+      "defaultValue": "10.0.2.0/24",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the address prefix of the subnet hosting virtual machines."
+      }
+    },
+    "bastionSubnetAddressPrefix": {
+      "defaultValue": "10.0.3.0/27",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the address prefix of the subnet hosting Azure Bastion."
+      }
+    },
+    "vmDiagnosticStorageAccountPrivateEndpointName": {
+      "defaultValue": "VmDiagnosticLogsStorageAccountPrivateEndpoint",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the name of the private endpoint to the storage account used for boot diagnostic logs of the virtual machine."
+      }
+    },
+
+    "sqlServerPrivateEndpointName": {
+      "defaultValue": "SqlServerPrivateEndpoint",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the name of the private endpoint to Azure SQL Database."
+      }
+    },
+    "redisCachePrivateEndpointName": {
+      "defaultValue": "RedisCachePrivateEndpoint",
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the name of the private endpoint to Azure SQL Database."
+      }
+    },
+    "bastionHostName": {
+      "type": "string",
+      "defaultValue": "[concat(parameters('webAppName'), 'Bastion')]",
+      "metadata": {
+        "description": "Specifies the name of the Azure Bastion resource."
+      }
+    },
+    "workspaceName": {
+      "type": "string",
+      "defaultValue": "[concat('loganalytics', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "Specifies the globally unique name of the Log Analytics workspace."
+      }
+    },
+    "workspaceSku": {
+      "type": "string",
+      "allowedValues": [
+        "PerGB2018",
+        "Free",
+        "Standalone",
+        "PerNode",
+        "Standard",
+        "Premium"
+      ],
+      "defaultValue": "PerGB2018",
+      "metadata": {
+        "description": "Specifies the SKU of the Log Analytics workspace."
+      }
+    },
+    "redisCacheName": {
+      "type": "string",
+      "defaultValue": "[concat('cache', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "The pricing tier of the new Azure Redis Cache."
+      }
+    },
+    "redisCacheSkuName": {
+      "type": "string",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ],
+      "defaultValue": "Standard",
+      "metadata": {
+        "description": "Specifies the pricing tier of the new Azure Redis Cache."
+      }
+    },
+    "redisCacheSkuFamily": {
+      "type": "string",
+      "allowedValues": [
+        "C",
+        "P"
+      ],
+      "defaultValue": "C",
+      "metadata": {
+        "description": "Specifies the family for the sku."
+      }
+    },
+    "redisCacheSkuCapacity": {
+      "type": "int",
+      "allowedValues": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Specifies the size of the new Azure Redis Cache instance."
+      }
+    },
+    "enableNonSslPort": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Specify a boolean value that indicates whether to allow access via non-SSL ports."
+      }
+    },
+    "publicNetworkAccess": {
+      "type": "string",
+      "defaultValue": "Disabled",
+      "allowedValues": [
+        "Enabled",
+        "Disabled"
+      ],
+      "metadata": {
+        "description": "Specify a boolean value that indicates whether to allow access via non-SSL ports."
+      }
+    },
+    "sqlServerName": {
+      "type": "string",
+      "defaultValue": "[concat('sqlserver', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "Specifies the name of the new Azure SQL Database server."
+      }
+    },
+    "sqlServerDatabaseName": {
+      "type": "string",
+      "defaultValue": "ProductsDB",
+      "metadata": {
+        "description": "Specifies the name of the new database to create."
+      }
+    },
+    "sqlServerDatabaseZoneRedundant": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Specifies whether or not this database is zone redundant, which means the replicas of this database will be spread across multiple availability zones."
+      }
+    },
+    "sqlServerAdministratorName": {
+      "type": "string",
+      "defaultValue": "azadmin",
+      "metadata": {
+        "description": "Specifies the admin user of the SQL Server"
+      }
+    },
+    "sqlServerAdministratorPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Specifies the password of the admin user of the SQL Server"
+      }
+    },
+    "sqlServerVersion": {
+      "type": "string",
+      "defaultValue": "12.0",
+      "metadata": {
+        "description": "Specifies the version of the SQL Server"
+      }
+    },
+    "transparentDataEncryption": {
+      "type": "string",
+      "allowedValues": [
+        "Enabled",
+        "Disabled"
+      ],
+      "defaultValue": "Enabled",
+      "metadata": {
+        "description": "Enable or disable Transparent Data Encryption (TDE) for the database."
+      }
+    },
+    "collation": {
+      "type": "string",
+      "defaultValue": "SQL_Latin1_General_CP1_CI_AS",
+      "metadata": {
+        "description": "Specifies the database collation for governing the proper use of characters."
+      }
+    },
+    "edition": {
+      "type": "string",
+      "defaultValue": "Standard",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ],
+      "metadata": {
+        "description": "Specifies the type of database to create."
+      }
+    },
+    "sqlServerDatabaseCapacity": {
+      "type": "int",
+      "defaultValue": 4,
+      "metadata": {
+        "description": "Specifies the capacity of the SQL Server database."
+      }
+    },
+    "maxSizeBytes": {
+      "type": "int",
+      "defaultValue": 4294967296,
+      "metadata": {
+        "description": "Specifies the maximum size, in bytes, for the database"
+      }
+    },
+    "minimumCapacity": {
+      "type": "int",
+      "defaultValue": 2,
+      "metadata": {
+        "description": "Specifies the minimum capacity.  Autoscale engine will ensure the instance count is at least this value."
+      }
+    },
+    "maximumCapacity": {
+      "type": "int",
+      "defaultValue": 5,
+      "metadata": {
+        "description": "Specifies the maximum capacity.  Autoscale engine will ensure the instance count is not greater than this value."
+      }
+    },
+    "defaultCapacity": {
+      "type": "int",
+      "defaultValue": 5,
+      "metadata": {
+        "description": "Specifies the default capacity.  Autoscale engine will preventively set the instance count to be this value if it can not find any metric data."
+      }
+    },
+    "metricName": {
+      "type": "string",
+      "defaultValue": "CpuPercentage",
+      "metadata": {
+        "description": "Specifies the metric name."
+      }
+    },
+    "metricThresholdToScaleOut": {
+      "type": "int",
+      "defaultValue": 60,
+      "metadata": {
+        "description": "Specifies the metric upper threshold.  If the metric value is above this threshold then autoscale engine will initiate scale out action."
+      }
+    },
+    "metricThresholdToScaleIn": {
+      "type": "int",
+      "defaultValue": 20,
+      "metadata": {
+        "description": "Specifies the metric lower threshold.  If the metric value is below this threshold then autoscale engine will initiate scale in action."
+      }
+    },
+    "changePercentScaleOut": {
+      "type": "int",
+      "defaultValue": 20,
+      "metadata": {
+        "description": "Specifies the percentage to increase the instance count when autoscale engine is initiating scale out action."
+      }
+    },
+    "changePercentScaleIn": {
+      "type": "int",
+      "defaultValue": 10,
+      "metadata": {
+        "description": "Specifies the percentage to decrease the instance count when autoscale engine is initiating scale in action."
+      }
+    },
+    "autoscaleEnabled": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Specifies whether the autoscale policy is enabled or disabled."
+      }
+    },
+    "retentionDays": {
+      "type": "int",
+      "defaultValue": 90,
+      "metadata": {
+        "description": "Specifies the retention period in days."
+      }
+    }
+  },
+  "variables": {
+    "storageBlobDNSZoneForwarder": "[concat('.blob.', environment().suffixes.storage)]",
+    "sqlServerDNSZoneForwarder": "[environment().suffixes.sqlServerHostname]",
+    "redisCacheDNSZoneForwarder": ".redis.cache.windows.net",
+
+    "storageBlobPrivateDnsZoneName": "[concat('privatelink', variables('storageBlobDNSZoneForwarder'))]",
+    "sqlServerPrivateDnsZoneName": "[concat('privatelink', variables('sqlServerDNSZoneForwarder'))]",
+    "redisCachePrivateDnsZoneName": "[concat('privatelink', variables('redisCacheDNSZoneForwarder'))]",
+
+    "storageBlobPrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('storageBlobPrivateDnsZoneName'))]",
+    "sqlServerPrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('sqlServerPrivateDnsZoneName'))]",
+    "redisCachePrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('redisCachePrivateDnsZoneName'))]",
+
+    "vmDiagnosticStorageAccountPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', parameters('vmDiagnosticStorageAccountPrivateEndpointName'))]",
+    "sqlServerPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', parameters('sqlServerPrivateEndpointName'))]",
+    "redisCachePrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', parameters('redisCachePrivateEndpointName'))]",
+
+    "vmDiagnosticStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('vmDiagnosticStorageAccountName'))]",
+    "webAppContentStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('fwebAppContentStorageAccountName'))]",
+    "sqlServerId": "[resourceId('Microsoft.Sql/servers', toLower(parameters('sqlServerName')))]",
+    "sqlServerDatabaseId": "[resourceId('Microsoft.Sql/servers/databases', parameters('sqlServerName'), parameters('sqlServerDatabaseName'))]",
+    "redisCacheId": "[resourceId('Microsoft.Cache/Redis', toLower(parameters('redisCacheName')))]",
+
+    "vmNicName": "[concat(parameters('vmName'), 'Nic')]",
+    "vmSubnetNsgName": "[concat(parameters('virtualMachineSubnetName'), 'Nsg')]",
+
+    "bastionPublicIPAddressName": "BastionPublicIp",
+    "bastionPublicIPAddressId": "[resourceId('Microsoft.Network/publicIPAddresses', variables('bastionPublicIPAddressName'))]",
+    "dnsLabelPrefix": "[concat('vm', uniqueString(resourceGroup().id))]",
+    "bastionHostId": "[resourceId('Microsoft.Network/bastionHosts', parameters('bastionHostName'))]",
+
+    "vmNicId": "[resourceId('Microsoft.Network/networkInterfaces', variables('vmNicName'))]",
+    "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+    "vmSubnetNsgId": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('vmSubnetNsgName'))]",
+    "vmId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('vmName'))]",
+
+    "webAppId": "[resourceId('Microsoft.Web/sites', parameters('webAppName'))]",
+    "hostingPlanId": "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+
+    "workspaceId": "[resourceId('Microsoft.OperationalInsights/workspaces', parameters('workspaceName'))]",
+    "applicationInsightsId": "[resourceId('Microsoft.Insights/components', parameters('applicationInsightsName'))]",
+
+    "virtualMachineSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualMachineSubnetName'))]",
+    "bastionSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('bastionSubnetName'))]",
+    "webAppSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('webAppSubnetName'))]",
+    "privateEndpointSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('privateEndpointSubnetName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2019-06-01",
+      "name": "[parameters('vmDiagnosticStorageAccountName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {
+      }
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2019-06-01",
+      "location": "[parameters('location')]",
+      "name": "[parameters('fwebAppContentStorageAccountName')]",
+      "sku": {
+        "name": "Standard_LRS",
+        "tier": "Standard"
+      },
+      "kind": "StorageV2",
+      "properties": {
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "Allow"
+        },
+        "supportsHttpsTrafficOnly": true
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2020-07-01",
+      "location": "[parameters('location')]",
+      "name": "[parameters('virtualNetworkName')]",
+      "dependsOn": [
+        "[variables('vmSubnetNsgId')]"
+      ],
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('virtualNetworkAddressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('webAppSubnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('webAppSubnetAddressPrefix')]",
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Enabled",
+              "delegations": [
+                {
+                  "name": "webapp",
+                  "properties": {
+                    "serviceName": "Microsoft.Web/serverFarms",
+                    "actions": [
+                      "Microsoft.Network/virtualNetworks/subnets/action"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "name": "[parameters('privateEndpointSubnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('privateEndpointSubnetAddressPrefix')]",
+              "privateLinkServiceNetworkPolicies": "Enabled",
+              "privateEndpointNetworkPolicies": "Disabled"
+            }
+          },
+          {
+            "name": "[parameters('virtualMachineSubnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('virtualMachineSubnetAddressPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('vmSubnetNsgName'))]"
+              },
+              "privateLinkServiceNetworkPolicies": "Enabled",
+              "privateEndpointNetworkPolicies": "Disabled"
+            }
+          },
+          {
+            "name": "[parameters('bastionSubnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('bastionSubnetAddressPrefix')]",
+              "privateEndpointNetworkPolicies": "Enabled",
+              "privateLinkServiceNetworkPolicies": "Enabled"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2020-06-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[parameters('vmName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('vmDiagnosticStorageAccountId')]",
+        "[variables('vmDiagnosticStorageAccountPrivateEndpointId')]",
+        "[variables('vmNicId')]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('vmName')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPasswordOrKey')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[parameters('imagePublisher')]",
+            "offer": "[parameters('imageOffer')]",
+            "sku": "[parameters('imageSku')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[concat(parameters('vmName'),'OSDisk')]",
+            "caching": "ReadWrite",
+            "createOption": "FromImage",
+            "diskSizeGB": "[parameters('osDiskSize')]",
+            "managedDisk": {
+              "storageAccountType": "[parameters('diskStorageAccounType')]"
+            }
+          },
+          "copy": [
+            {
+              "name": "dataDisks",
+              "count": "[parameters('numDataDisks')]",
+              "input": {
+                "caching": "[parameters('dataDiskCaching')]",
+                "diskSizeGB": "[parameters('dataDiskSize')]",
+                "lun": "[copyIndex('dataDisks')]",
+                "name": "[concat(parameters('vmName'),'-DataDisk',copyIndex('dataDisks'))]",
+                "createOption": "Empty",
+                "managedDisk": {
+                  "storageAccountType": "[parameters('diskStorageAccounType')]"
+                }
+              }
+            }
+          ]
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('vmNicName'))]"
+            }
+          ]
+        },
+        "diagnosticsProfile": {
+          "bootDiagnostics": {
+            "enabled": true,
+            "storageUri": "[reference(variables('vmDiagnosticStorageAccountId')).primaryEndpoints['blob']]"
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "2020-06-01",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('vmName'), '/MicrosoftMonitoringAgent')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('vmId')]",
+        "[variables('workspaceId')]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+        "type": "MicrosoftMonitoringAgent",
+        "typeHandlerVersion": "1.0",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "workspaceId": "[reference(variables('workspaceId'), '2020-08-01').customerId]",
+          "stopOnMultipleConnections": false
+        },
+        "protectedSettings": {
+          "workspaceKey": "[listKeys(variables('workspaceId'),'2020-08-01').primarySharedKey]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2020-06-01",
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(parameters('vmName'), '/DependencyAgent')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[variables('vmId')]",
+        "[variables('workspaceId')]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Monitoring.DependencyAgent",
+        "type": "DependencyAgentWindows",
+        "typeHandlerVersion": "9.4",
+        "autoUpgradeMinorVersion": true
+      }
+    },
+    {
+      "apiVersion": "2020-08-01",
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "name": "[parameters('workspaceName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "name": "[parameters('workspaceSku')]"
+        }
+      },
+      "resources": [
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsLogicalDiskAvgDiskSecTransfer",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "LogicalDisk",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Avg. Disk sec/Transfer"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsLogicalDiskDiskReadBytesSec",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "LogicalDisk",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Disk Read Bytes/sec"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsLogicalDiskDiskTransfersSec",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "LogicalDisk",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Disk Transfers/sec"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsLogicalDiskDiskWritesSec",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "LogicalDisk",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Average_Disk Writes/sec"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsLogicalDiskFreeMegabytes",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "LogicalDisk",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Free Megabytes"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsMemoryAvailableMBytes",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "Memory",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Available MBytes Memory"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsMemoryPercentageUsedMemory",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "Memory",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Average_% Used Memory"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsNetworkAdapterTotalBytesReceived",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "Network Adapter",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Total Bytes Received"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsNetworkAdapterTotalBytesTransmitted",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "Network Adapter",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Total Bytes Transmitted"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsNetworkAdapterTotalBytes",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "Network Adapter",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Total Bytes"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsProcessorPctProcessorTimeTotal",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "Processor",
+            "instanceName": "_Total",
+            "intervalSeconds": 10,
+            "counterName": "% Processor Time"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsLogicalDiskCurrentDiskQueueLength",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "LogicalDisk",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Average_Current Disk Queue Length"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsLogicalDiskDiskReadsSec",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "LogicalDisk",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Disk Reads/sec"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsASPNETApplicationsRequestsSec",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "ASP.NET Applications",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Requests/Sec"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsASPNETApplicationsRequestExecutionTime",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "ASP.NET Applications",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Request Execution Time"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsASPNETApplicationsRequestsExecuting",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "ASP.NET Applications",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Requests Executing"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsASPNETApplicationsRequestsInApplicationQueue",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "ASP.NET Applications",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Requests In Application Queue"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsASPNETApplicationsRequestsTimedOut",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "ASP.NET Applications",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Requests Timed Out"
+          }
+        },
+        {
+          "apiVersion": "2020-08-01",
+          "type": "dataSources",
+          "name": "VMInsightsASPNETApplicationsErrorsTotalSec",
+          "dependsOn": [
+            "[variables('workspaceId')]"
+          ],
+          "kind": "WindowsPerformanceCounter",
+          "properties": {
+            "objectName": "ASP.NET Applications",
+            "instanceName": "*",
+            "intervalSeconds": 10,
+            "counterName": "Errors Total/Sec"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02-preview",
+      "location": "[parameters('location')]",
+      "name": "[parameters('applicationInsightsName')]",
+      "kind": "web",
+      "dependsOn": [
+        "[variables('workspaceId')]"
+      ],
+      "properties": {
+        "Application_Type": "web",
+        "SamplingPercentage": 100,
+        "DisableIpMasking": true,
+        "WorkspaceResourceId": "[variables('workspaceId')]"
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('storageBlobPrivateDnsZoneName')]",
+      "location": "global",
+      "properties": {
+        "maxNumberOfRecordSets": 25000,
+        "maxNumberOfVirtualNetworkLinks": 1000,
+        "maxNumberOfVirtualNetworkLinksWithRegistration": 100
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('sqlServerPrivateDnsZoneName')]",
+      "location": "global",
+      "properties": {
+        "maxNumberOfRecordSets": 25000,
+        "maxNumberOfVirtualNetworkLinks": 1000,
+        "maxNumberOfVirtualNetworkLinksWithRegistration": 100
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('redisCachePrivateDnsZoneName')]",
+      "location": "global",
+      "properties": {
+        "maxNumberOfRecordSets": 25000,
+        "maxNumberOfVirtualNetworkLinks": 1000,
+        "maxNumberOfVirtualNetworkLinksWithRegistration": 100
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2020-06-01",
+      "name": "[concat(variables('storageBlobPrivateDnsZoneName'), '/link_to_', toLower(parameters('virtualNetworkName')))]",
+      "location": "global",
+      "dependsOn": [
+        "[variables('storageBlobPrivateDnsZoneId')]",
+        "[variables('vnetId')]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[variables('vnetId')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2020-06-01",
+      "name": "[concat(variables('sqlServerPrivateDnsZoneName'), '/link_to_', toLower(parameters('virtualNetworkName')))]",
+      "location": "global",
+      "dependsOn": [
+        "[variables('sqlServerPrivateDnsZoneId')]",
+        "[variables('vnetId')]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[variables('vnetId')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2020-06-01",
+      "name": "[concat(variables('redisCachePrivateDnsZoneName'), '/link_to_', toLower(parameters('virtualNetworkName')))]",
+      "location": "global",
+      "dependsOn": [
+        "[variables('redisCachePrivateDnsZoneId')]",
+        "[variables('vnetId')]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[variables('vnetId')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[parameters('vmDiagnosticStorageAccountPrivateEndpointName')]",
+      "apiVersion": "2020-07-01",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('vmDiagnosticStorageAccountId')]",
+        "[variables('vnetId')]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[variables('privateEndpointSubnetId')]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[parameters('vmDiagnosticStorageAccountPrivateEndpointName')]",
+            "properties": {
+              "privateLinkServiceId": "[variables('vmDiagnosticStorageAccountId')]",
+              "groupIds": [
+                "blob"
+              ]
+            }
+          }
+        ]
+      },
+      "resources": [
+        {
+          "type": "privateDnsZoneGroups",
+          "apiVersion": "2020-07-01",
+          "location": "[parameters('location')]",
+          "name": "BlobPrivateDnsZoneGroup",
+          "dependsOn": [
+            "[variables('storageBlobPrivateDnsZoneId')]",
+            "[variables('vmDiagnosticStorageAccountPrivateEndpointId')]"
+          ],
+          "properties": {
+            "privateDnsZoneConfigs": [
+              {
+                "name": "dnsConfiguration",
+                "properties": {
+                  "privateDnsZoneId": "[variables('storageBlobPrivateDnsZoneId')]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[parameters('sqlServerPrivateEndpointName')]",
+      "apiVersion": "2020-07-01",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('sqlServerId')]",
+        "[variables('vnetId')]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[variables('privateEndpointSubnetId')]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[parameters('vmDiagnosticStorageAccountPrivateEndpointName')]",
+            "properties": {
+              "privateLinkServiceId": "[variables('sqlServerId')]",
+              "groupIds": [
+                "sqlServer"
+              ]
+            }
+          }
+        ]
+      },
+      "resources": [
+        {
+          "type": "privateDnsZoneGroups",
+          "apiVersion": "2020-07-01",
+          "location": "[parameters('location')]",
+          "name": "SqlServerPrivateDnsZoneGroup",
+          "dependsOn": [
+            "[variables('sqlServerPrivateDnsZoneId')]",
+            "[variables('sqlServerPrivateEndpointId')]"
+          ],
+          "properties": {
+            "privateDnsZoneConfigs": [
+              {
+                "name": "dnsConfiguration",
+                "properties": {
+                  "privateDnsZoneId": "[variables('sqlServerPrivateDnsZoneId')]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[parameters('redisCachePrivateEndpointName')]",
+      "apiVersion": "2020-07-01",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('redisCacheId')]",
+        "[variables('vnetId')]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[variables('privateEndpointSubnetId')]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[parameters('vmDiagnosticStorageAccountPrivateEndpointName')]",
+            "properties": {
+              "privateLinkServiceId": "[variables('redisCacheId')]",
+              "groupIds": [
+                "redisCache"
+              ]
+            }
+          }
+        ]
+      },
+      "resources": [
+        {
+          "type": "privateDnsZoneGroups",
+          "apiVersion": "2020-07-01",
+          "location": "[parameters('location')]",
+          "name": "RedisCachePrivateDnsZoneGroup",
+          "dependsOn": [
+            "[variables('redisCachePrivateDnsZoneId')]",
+            "[variables('redisCachePrivateEndpointId')]"
+          ],
+          "properties": {
+            "privateDnsZoneConfigs": [
+              {
+                "name": "dnsConfiguration",
+                "properties": {
+                  "privateDnsZoneId": "[variables('redisCachePrivateDnsZoneId')]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Network/bastionHosts",
+      "name": "[parameters('bastionHostName')]",
+      "apiVersion": "2020-05-01",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('bastionPublicIPAddressId')]",
+        "[variables('vnetId')]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "IpConfiguration",
+            "properties": {
+              "subnet": {
+                "id": "[variables('bastionSubnetId')]"
+              },
+              "publicIPAddress": {
+                "id": "[variables('bastionPublicIPAddressId')]"
+              }
+            }
+          }
+        ]
+      },
+      "resources": [
+        {
+          "type": "providers/diagnosticSettings",
+          "apiVersion": "2017-05-01-preview",
+          "name": "Microsoft.Insights/default",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[variables('bastionHostId')]",
+            "[variables('workspaceId')]"
+          ],
+          "properties": {
+            "workspaceId": "[variables('workspaceId')]",
+            "metrics": [],
+            "logs": [
+              {
+                "category": "BastionAuditLogs",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2020-07-01",
+      "name": "[variables('vmNicName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('vnetId')]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipConfiguration",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('virtualMachineSubnetId')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2020-07-01",
+      "name": "[variables('bastionPublicIPAddressName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('dnsLabelPrefix')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2020-07-01",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "name": "[variables('vmSubnetNsgName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Block_RDP_Internet",
+            "properties": {
+              "description": "Block RDP",
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "Internet",
+              "destinationAddressPrefix": "*",
+              "access": "Deny",
+              "priority": 101,
+              "direction": "Inbound"
+            }
+          }
+        ]
+      },
+      "resources": [
+        {
+          "type": "providers/diagnosticSettings",
+          "apiVersion": "2017-05-01-preview",
+          "name": "Microsoft.Insights/diagnosticSettings",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[variables('vmSubnetNsgId')]",
+            "[variables('workspaceId')]"
+          ],
+          "properties": {
+            "workspaceId": "[variables('workspaceId')]",
+            "metrics": [],
+            "logs": [
+              {
+                "category": "NetworkSecurityGroupEvent",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              },
+              {
+                "category": "NetworkSecurityGroupRuleCounter",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/autoscalesettings",
+      "name": "[concat(parameters('hostingPlanName'), '-Autoscale')]",
+      "dependsOn": [
+        "[variables('hostingPlanId')]"
+      ],
+      "apiVersion": "2014-04-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "profiles": [
+          {
+            "name": "DefaultAutoscaleProfile",
+            "capacity": {
+              "minimum": "[parameters('minimumCapacity')]",
+              "maximum": "[parameters('maximumCapacity')]",
+              "default": "[parameters('defaultCapacity')]"
+            },
+            "rules": [
+              {
+                "metricTrigger": {
+                  "metricName": "[parameters('metricName')]",
+                  "metricNamespace": "",
+                  "metricResourceUri": "[variables('hostingPlanId')]",
+                  "timeGrain": "PT5M",
+                  "statistic": "Average",
+                  "timeWindow": "PT10M",
+                  "timeAggregation": "Average",
+                  "operator": "GreaterThan",
+                  "threshold": "[parameters('metricThresholdToScaleOut')]"
+                },
+                "scaleAction": {
+                  "direction": "Increase",
+                  "type": "PercentChangeCount",
+                  "value": "[parameters('changePercentScaleOut')]",
+                  "cooldown": "PT10M"
+                }
+              },
+              {
+                "metricTrigger": {
+                  "metricName": "[parameters('metricName')]",
+                  "metricNamespace": "",
+                  "metricResourceUri": "[variables('hostingPlanId')]",
+                  "timeGrain": "PT5M",
+                  "statistic": "Average",
+                  "timeWindow": "PT10M",
+                  "timeAggregation": "Average",
+                  "operator": "LessThan",
+                  "threshold": "[parameters('metricThresholdToScaleIn')]"
+                },
+                "scaleAction": {
+                  "direction": "Decrease",
+                  "type": "PercentChangeCount",
+                  "value": "[parameters('changePercentScaleIn')]",
+                  "cooldown": "PT10M"
+                }
+              }
+            ]
+          }
+        ],
+        "enabled": "[parameters('autoscaleEnabled')]",
+        "targetResourceUri": "[variables('hostingPlanId')]"
+      }
+    },
+    {
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2020-09-01",
+      "name": "[parameters('hostingPlanName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('hostingPlanSkuName')]",
+        "capacity": "[parameters('hostingPlanSkuCapacity')]"
+      },
+      "kind": "app",
+      "properties": {
+        "perSiteScaling": true
+      },
+      "resources": [
+        {
+          "apiVersion": "2017-05-01-preview",
+          "type": "providers/diagnosticSettings",
+          "name": "Microsoft.Insights/service",
+          "dependsOn": [
+            "[variables('hostingPlanId')]",
+            "[variables('workspaceId')]"
+          ],
+          "properties": {
+            "mode": "Incremental",
+            "workspaceId": "[variables('workspaceId')]",
+            "logs": [],
+            "metrics": [
+              {
+                "category": "AllMetrics",
+                "timeGrain": "PT1M",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2020-09-01",
+      "name": "[parameters('webAppName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('hostingPlanId')]",
+        "[variables('webAppContentStorageAccountId')]",
+        "[variables('vnetId')]",
+        "[variables('redisCacheId')]"
+      ],
+      "tags": {
+        "displayName": "Website"
+      },
+      "kind": "app",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(variables('applicationInsightsId'), '2020-02-02-preview').instrumentationKey]"
+            },
+            {
+              "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+              "value": "[concat('InstrumentationKey=', reference(variables('applicationInsightsId'), '2020-02-02-preview').instrumentationKey)]"
+            },
+            {
+              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('fwebAppContentStorageAccountName'),';AccountKey=',listkeys(variables('webAppContentStorageAccountId'), '2019-06-01').keys[0].value,';')]"
+            },
+            {
+              "name": "WEBSITE_CONTENTSHARE",
+              "value": "[toLower(parameters('hostingPlanName'))]"
+            },
+            {
+              "name": "WEBSITE_VNET_ROUTE_ALL",
+              "value": "1"
+            },
+            {
+              "name": "WEBSITE_DNS_SERVER",
+              "value": "168.63.129.16"
+            },
+            {
+              "name": "SQL_DB_CONNECTION_STRING",
+              "value": "[concat('Data Source=tcp:', reference(variables('sqlServerId')).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('sqlServerDatabaseName'), ';User Id=', parameters('sqlServerAdministratorName'), '@', parameters('sqlServerName'), ';Password=', parameters('sqlServerAdministratorPassword'), ';')]"
+            },
+            {
+              "name": "REDIS_CACHE_CONNECTION_STRING",
+              "value": "[concat(toLower(parameters('redisCacheName')),'.redis.cache.windows.net:6380,abortConnect=false,ssl=True,sslprotocols=tls12,password=', listKeys(variables('redisCacheId'), '2019-07-01').primaryKey)]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "type": "networkConfig",
+          "apiVersion": "2019-08-01",
+          "name": "virtualNetwork",
+          "dependsOn": [
+            "[variables('webAppId')]"
+          ],
+          "properties": {
+            "subnetResourceId": "[variables('webAppSubnetId')]",
+            "isSwift": true
+          }
+        },
+        {
+          "type": "providers/diagnosticsettings",
+          "name": "Microsoft.Insights/service",
+          "apiVersion": "2017-05-01-preview",
+          "dependsOn": [
+            "[variables('webAppId')]",
+            "[variables('workspaceId')]"
+          ],
+          "properties": {
+            "workspaceId": "[variables('workspaceId')]",
+            "logs": [
+              {
+                "category": "AppServiceAntivirusScanAuditLogs",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              },
+              {
+                "category": "AppServiceHTTPLogs",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              },
+              {
+                "category": "AppServiceConsoleLogs",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              },
+              {
+                "category": "AppServiceAppLogs",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              },
+              {
+                "category": "AppServiceFileAuditLogs",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              },
+              {
+                "category": "AppServiceAuditLogs",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              },
+              {
+                "category": "AppServiceIPSecAuditLogs",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              },
+              {
+                "category": "AppServicePlatformLogs",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              }
+            ],
+            "metrics": [
+              {
+                "category": "AllMetrics",
+                "timeGrain": "PT1M",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "type": "microsoft.insights/activityLogAlerts",
+      "apiVersion": "2017-04-01",
+      "name": "AllAzureAdvisorAlert",
+      "location": "Global",
+      "properties": {
+        "scopes": [
+          "[resourceGroup().id]"
+        ],
+        "condition": {
+          "allOf": [
+            {
+              "field": "category",
+              "equals": "Recommendation"
+            },
+            {
+              "field": "operationName",
+              "equals": "Microsoft.Advisor/recommendations/available/action"
+            }
+          ]
+        },
+        "actions": {
+          "actionGroups": [
+          ]
+        },
+        "enabled": true,
+        "description": "All azure advisor alerts"
+      }
+    },
+    {
+      "type": "Microsoft.Cache/Redis",
+      "apiVersion": "2020-06-01",
+      "name": "[toLower(parameters('redisCacheName'))]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "[parameters(toLower('redisCacheName'))]"
+      },
+      "properties": {
+        "enableNonSslPort": "[parameters('enableNonSslPort')]",
+        "minimumTlsVersion": "1.2",
+        "publicNetworkAccess": "[parameters('publicNetworkAccess')]",
+        "sku": {
+          "name": "[parameters('redisCacheSkuName')]",
+          "family": "[parameters('redisCacheSkuFamily')]",
+          "capacity": "[parameters('redisCacheSkuCapacity')]"
+        }
+      },
+      "resources": [
+        {
+          "type": "providers/diagnosticSettings",
+          "apiVersion": "2017-05-01-preview",
+          "name": "Microsoft.Insights/diagnosticSettings",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[variables('redisCacheId')]",
+            "[variables('workspaceId')]"
+          ],
+          "properties": {
+            "workspaceId": "[variables('workspaceId')]",
+            "metrics": [
+              {
+                "category": "AllMetrics",
+                "timeGrain": "PT1M",
+                "enabled": true,
+                "retentionPolicy": {
+                  "enabled": true,
+                  "days": "[parameters('retentionDays')]"
+                }
+              }
+            ],
+            "logs": []
+          }
+        }
+      ]
+    },
+    {
+
+      "type": "Microsoft.Sql/servers",
+      "apiVersion": "2020-11-01-preview",
+      "name": "[toLower(parameters('sqlServerName'))]",
+      "location": "[parameters('location')]",
+      "tags": {
+        "displayName": "SqlServer"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('sqlServerAdministratorName')]",
+        "administratorLoginPassword": "[parameters('sqlServerAdministratorPassword')]",
+        "publicNetworkAccess": "[parameters('publicNetworkAccess')]",
+        "version": "[parameters('sqlServerVersion')]"
+      },
+      "resources": [
+        {
+          "type": "auditingSettings",
+          "apiVersion": "2020-11-01-preview",
+          "name": "DefaultAuditingSettings",
+          "dependsOn": [
+            "[variables('sqlServerId')]"
+          ],
+          "properties": {
+            "State": "Enabled",
+            "isAzureMonitorTargetEnabled": true
+          }
+        },
+        {
+          "type": "databases",
+          "apiVersion": "2020-11-01-preview",
+          "name": "[parameters('sqlServerDatabaseName')]",
+          "location": "[parameters('location')]",
+          "tags": {
+            "displayName": "Database"
+          },
+          "dependsOn": [
+            "[variables('sqlServerId')]"
+          ],
+          "sku": {
+            "name": "GP_Gen5",
+            "tier": "GeneralPurpose",
+            "family": "Gen5",
+            "capacity": "[parameters('sqlServerDatabaseCapacity')]"
+          },
+          "properties": {
+            "edition": "[parameters('edition')]",
+            "collation": "[parameters('collation')]",
+            "maxSizeBytes": "[parameters('maxSizeBytes')]",
+            "zoneRedundant": "[parameters('sqlServerDatabaseZoneRedundant')]"
+          },
+          "resources": [
+            {
+              "comments": "Transparent Data Encryption",
+              "type": "transparentDataEncryption",
+              "apiVersion": "2017-03-01-preview",
+              "name": "current",
+              "dependsOn": [
+                "[variables('sqlServerDatabaseId')]"
+              ],
+              "properties": {
+                "status": "[parameters('transparentDataEncryption')]"
+              }
+            },
+            {
+              "type": "providers/diagnosticSettings",
+              "apiVersion": "2017-05-01-preview",
+              "name": "Microsoft.Insights/diagnosticSettings",
+              "location": "[parameters('location')]",
+              "dependsOn": [
+                "[variables('sqlServerDatabaseId')]",
+                "[variables('workspaceId')]"
+              ],
+              "properties": {
+                "workspaceId": "[variables('workspaceId')]",
+                "metrics": [
+                  {
+                    "category": "Basic",
+                    "timeGrain": "PT1M",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  },
+                  {
+                    "category": "InstanceAndAppAdvanced",
+                    "timeGrain": "PT1M",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  },
+                  {
+                    "category": "WorkloadManagement",
+                    "timeGrain": "PT1M",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  }
+                ],
+                "logs": [
+                  {
+                    "category": "SQLInsights",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  },
+                  {
+                    "category": "AutomaticTuning",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  },
+                  {
+                    "category": "QueryStoreRuntimeStatistics",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  },
+                  {
+                    "category": "QueryStoreWaitStatistics",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  },
+                  {
+                    "category": "Errors",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  },
+                  {
+                    "category": "DatabaseWaitStatistics",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  },
+                  {
+                    "category": "Timeouts",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  },
+                  {
+                    "category": "Blocks",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  },
+                  {
+                    "category": "Deadlocks",
+                    "enabled": true,
+                    "retentionPolicy": {
+                      "enabled": true,
+                      "days": "[parameters('retentionDays')]"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "outputs": {
+  }
+}
