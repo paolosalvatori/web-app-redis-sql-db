@@ -1,9 +1,4 @@
 ---
-page_type: sample
-languages:
-- al-language
-- aspx-csharp
-- bash
 products:
 - azure
 - aspnet
@@ -19,10 +14,6 @@ products:
 - azure-nat-gateway
 - azure-virtual-machines
 - vs-code
-name: How to configure a Web App to call Azure Cache for Redis and Azure SQL Database via Private Endpoints
-description: This sample shows how to configure an Azure App Service to access Azure Cache for Redis and Azure SQL Database via regional VET integration and Private Endpoints
-urlFragment: web-app-redis-sql-db
-azureDeploy: https://raw.githubusercontent.com/paolosalvatori/web-app-redis-sql-db/main/templates/azuredeploy.endpoint.json
 ---
 
 # How to configure a Web App to call Azure Cache for Redis and Azure SQL Database via Private Endpoints
