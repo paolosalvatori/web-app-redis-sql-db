@@ -18,13 +18,13 @@ select opt in "${options[@]}"; do
     "Inject Premium Azure Cache for Redis in a VNET")
         template="../templates/azuredeploy.vnet.json"
         parameters="../templates/azuredeploy.vnet.parameters.json"
-        resourceGroupName="WebAppSqlDbRedisInVnetRG"
+        resourceGroupName="WebAppRedisCacheInVnetSqlDbRG"
         break
         ;;
     "Azure Cache for Redis with Azure Private Link")
         template="../templates/azuredeploy.endpoint.json"
         parameters="../templates/azuredeploy.endpoint.parameters.json"
-        resourceGroupName="WebAppSqlDbRedisCacheRG"
+        resourceGroupName="WebAppRedisCacheSqlDb"
         break
         ;;
     "Quit")

@@ -117,11 +117,29 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AddProduct" xml:space="preserve">
+    <value>EXEC [dbo].[AddProduct] @ProductID OUTPUT, @Name, @Category, @Price</value>
+  </data>
+  <data name="ApplicationInsightsConnectionString" xml:space="preserve">
+    <value>APPINSIGHTS_CONNECTIONSTRING</value>
+  </data>
+  <data name="DeleteProduct" xml:space="preserve">
+    <value>EXEC [dbo].[DeleteProduct] @ProductID</value>
+  </data>
   <data name="ExceptionFormat" xml:space="preserve">
     <value>{0} Exception: [{1}] InnerException: [{2}]</value>
   </data>
+  <data name="GetProduct" xml:space="preserve">
+    <value>EXEC [dbo].[GetProduct] @ProductID</value>
+  </data>
+  <data name="GetProducts" xml:space="preserve">
+    <value>EXEC [dbo].[GetProducts]</value>
+  </data>
   <data name="In" xml:space="preserve">
     <value>In</value>
+  </data>
+  <data name="KeyVaultUri" xml:space="preserve">
+    <value>KeyVaultUri</value>
   </data>
   <data name="MethodNameFormat" xml:space="preserve">
     <value>[{0}.{1}]</value>
@@ -131,6 +149,15 @@
   </data>
   <data name="Out" xml:space="preserve">
     <value>Out</value>
+  </data>
+  <data name="RedisCacheConnectionString" xml:space="preserve">
+    <value>RedisCacheConnectionString</value>
+  </data>
+  <data name="RedisKeys" xml:space="preserve">
+    <value>RedisKeys</value>
+  </data>
+  <data name="SqlServerConnectionString" xml:space="preserve">
+    <value>SqlServerConnectionString</value>
   </data>
   <data name="TraceInFormat" xml:space="preserve">
     <value>{0} {1}</value>
@@ -146,5 +173,8 @@
   </data>
   <data name="Unknown" xml:space="preserve">
     <value>Unknown</value>
+  </data>
+  <data name="UpdateProduct" xml:space="preserve">
+    <value>EXEC [dbo].[UpdateProduct] @ProductID, @Name, @Category, @Price</value>
   </data>
 </root>

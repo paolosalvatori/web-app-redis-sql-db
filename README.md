@@ -117,10 +117,9 @@ In addition, both ARM templates automatically create the connection string to bo
 
 The following components are required to run this sample:
 
-- [.NET Framework](https://dotnet.microsoft.com/download/dotnet-framework/net48)
+- [.NET Core 3.1](https://dotnet.microsoft.com/download/dotnet-core/3.1)
 - [Visual Studio Code](https://code.visualstudio.com/)
 - [Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli?view=azure-cli-latest)
-- [Azure Web Apps Core Tools](https://docs.microsoft.com/azure/azure-functions/functions-run-local)
 - [Azure subscription](https://azure.microsoft.com/free/)
 
 ## Topology Deployment
@@ -314,10 +313,6 @@ deployTemplate \
     "$parameters"
 ```
 
-The following figure shows the Azure resources grouped by type deployed by the `azuredeploy.endpoint.json`ARM template in the target resource group.
-
-![Resources](images/resources.png)
-
 ## Create the database
 
 You can use the `ProductsDB` T-SQL script to create the database used by the companion application. You can proceed as follows:
@@ -330,9 +325,545 @@ You can use the `ProductsDB` T-SQL script to create the database used by the com
 
 ![Resources](images/bastion.png)
 
-## Deploy the code of the Azure Web App
+## Deploy the code of the ASP.NET Core application
 
-Once the Azure resources have been deployed to Azure (which can take about 10-12 minutes), you need to deploy the Azure Web App contained in the src folder to the newly created Azure Web App app. Each Azure Web App app has an Advanced Tool (Kudu) site that is used to manage web app deployments. This site is accessed from a URL like: <WEB_APP_NAME>.scm.azurewebsites.net. You can use [Visual Studio Code](https://code.visualstudio.com/) or [Visual Studio](https://visualstudio.microsoft.com/) to deploy the code of the companion ASP.NET application to the Azure App Service created by the ARM template.
+This sample provides an ASP.NET Core single-page application (SPA) to test the topology. The application reads:
+
+- Azure Cache for Redis connection string
+- Azure SQL Database connection string
+- Application Insights Instrumentation Key
+
+application settings from Azure Key Vault using the following code defined in the `Program` class. For more information, see [Azure Key Vault configuration provider in ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/security/key-vault-configuration?view=aspnetcore-5.0).
+
+### Program.cs
+
+```csharp
+using System;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using Azure.Identity;
+using Azure.Security.KeyVault.Secrets;
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
+using Products.Properties;
+
+namespace Products
+{
+    public class Program
+    {
+        public static void Main(string[] args)
+        {
+            CreateHostBuilder(args).Build().Run();
+        }
+
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((context, config) =>
+                {
+                    var builtConfig = config.Build();
+                    var keyVaultUri = builtConfig[Resources.KeyVaultUri];
+                    if (string.IsNullOrEmpty(keyVaultUri))
+                    {
+                        throw new Exception("KeyVaultUri parameter in the appsettings.json cannot be null or empty");
+                    }
+                    var secretClient = new SecretClient(
+                        new Uri(keyVaultUri),
+                        new DefaultAzureCredential());
+                    config.AddAzureKeyVault(secretClient, new KeyVaultSecretManager());
+                })
+                .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>());
+    }
+}
+```
+
+The application makes use of the following libraries and features:
+
+- [StackExchange.Redis](https://github.com/StackExchange/StackExchange.Redis) library to read, create, update, and delete string values and [sets](https://redis.io/topics/data-types) in the Azure Cache for Redis. For more information, see [Quickstart: Use Azure Cache for Redis with an ASP.NET web app](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-web-app-howto). 
+- [Entity Framework 5.0](https://docs.microsoft.com/en-us/ef/core/what-is-new/ef-core-5.0/whatsnew) to read, create, update, and delete records from the Products table in the Azure SQL Database. For more information, see [Tutorial: Get started with EF Core in an ASP.NET MVC web app](https://docs.microsoft.com/en-us/aspnet/core/data/ef-mvc/intro?view=aspnetcore-5.0).
+- [Dependency injection in ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection) to inject services into the constructor of the class where it's used. The framework takes on the responsibility of creating an instance of the dependency and disposing of it when it's no longer needed. For more information, see the code of the `ConfigureServices` method in the `Startup` class below.
+
+### Startup.cs
+
+```csharp
+using System;
+using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
+using Products.Properties;
+using Products.Models;
+using Products.Helpers;
+
+namespace Products
+{
+    public class Startup
+    {
+        /// <summary>
+        /// Creates an instance of the Startup class
+        /// </summary>
+        /// <param name="configuration">The configuration created by the CreateDefaultBuilder.</param>
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        /// <summary>
+        /// Gets or sets the Configuration property.
+        /// </summary>
+        public IConfiguration Configuration { get; }
+
+        /// <summary>
+        /// This method gets called by the runtime. Use this method to add services to the container.
+        /// </summary>
+        /// <param name="services">The services collection.</param>
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddControllersWithViews();
+            services.AddApplicationInsightsTelemetry(Configuration[Resources.ApplicationInsightsConnectionString]);
+            services.AddOptions();
+            services.AddMvc();
+            services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(Configuration.GetConnectionString(Resources.RedisCacheConnectionString)));
+            services.AddDbContext<ProductsContext>(options => options.UseSqlServer(Configuration.GetConnectionString(Resources.SqlServerConnectionString)));
+
+            // Register the Swagger generator, defining one or more Swagger documents
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = "Products API",
+                    Description = "A simple example ASP.NET Core Web API",
+                    TermsOfService = new Uri("https://www.apache.org/licenses/LICENSE-2.0"),
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Paolo Salvatori",
+                        Email = "paolos@microsoft.com",
+                        Url = new Uri("https://github.com/paolosalvatori")
+                    },
+                    License = new OpenApiLicense
+                    {
+                        Name = "Use under Apache License 2.0",
+                        Url = new Uri("https://www.apache.org/licenses/LICENSE-2.0")
+                    }
+                });
+            });
+        }
+
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                app.UseExceptionHandler("/Home/Error");
+                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                app.UseHsts();
+            }
+
+            // Enable middleware to serve generated Swagger as a JSON endpoint.
+            app.UseSwagger();
+
+            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.), specifying the Swagger JSON endpoint.
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "TodoList API V1");
+                c.RoutePrefix = "swagger";
+            });
+
+            app.UseHttpsRedirection();
+            app.UseStaticFiles();
+
+            app.UseRouting();
+
+            app.UseAuthorization();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
+            });
+        }
+    }
+}
+```
+
+The table below shows the code of the REST API implemented by the `ProductsController` class. This API is called via [jQuery](https://api.jquery.com/jquery.ajax/) by the client-side script running in the single-page application.
+
+```csharp
+using System;
+using System.Linq;
+using System.Data;
+using System.Diagnostics;
+using System.Threading.Tasks;
+using System.Globalization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
+using Products.Models;
+using Products.Properties;
+using Products.Helpers;
+
+namespace Products.Controllers
+{
+    [Route("api/[controller]")]
+    [Produces("application/json")]
+    [ApiController]
+    public class ProductsController : ControllerBase
+    {
+        #region Private Instance Fields
+        private readonly ILogger<ProductsController> logger;
+        private readonly ProductsContext context;
+        private readonly IDatabase database;
+        #endregion
+
+        #region Public Constructors
+        public ProductsController(ILogger<ProductsController> logger,
+                                  ProductsContext context,
+                                  IConnectionMultiplexer connectionMultiplexer)
+        {
+            this.logger = logger;
+            this.context = context;
+            database = connectionMultiplexer.GetDatabase();
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Gets all the products.
+        /// </summary>
+        /// <returns>All the products.</returns>
+        /// <response code="200">Get all the products, if any.</response>
+        [HttpGet]
+        [ProducesResponseType(typeof(Product), 200)]
+        public async Task<IActionResult> GetAllProductsAsync()
+        {
+            var stopwatch = new Stopwatch();
+
+            try
+            {
+                stopwatch.Start();
+                logger.LogInformation("Listing all products...");
+                var values = await database.SetMembersAsync(Resources.RedisKeys);
+                var items = await database.GetAsync<Product>(values.Select(v => (string)v).ToArray());
+                if (items.Any())
+                {
+                    var list = items.ToList();
+                    list.Sort((x, y) => x.ProductId - y.ProductId);
+                    return new OkObjectResult(list.ToArray());
+                }
+                var products = context.Products.FromSqlRaw(Resources.GetProducts);
+                foreach (var product in products)
+                {
+                    var idAsString = product.ProductId.ToString(CultureInfo.InvariantCulture);
+                    await database.SetAsync(idAsString, product);
+                    await database.SetAddAsync(Resources.RedisKeys, idAsString);
+                }
+                return new OkObjectResult(products.ToArray());
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = MessageHelper.FormatException(ex);
+                logger.LogError(errorMessage);
+                return StatusCode(400, new { error = errorMessage });
+            }
+            finally
+            {
+                stopwatch.Stop();
+                logger.LogInformation($"GetAllProductsAsync method completed in {stopwatch.ElapsedMilliseconds} ms.");
+            }
+        }
+
+        /// <summary>
+        /// Gets a specific product by id.
+        /// </summary>
+        /// <param name="id">Id of the product.</param>
+        /// <returns>Product with the specified id.</returns>
+        /// <response code="200">Product found</response>
+        /// <response code="404">Product not found</response>     
+        [HttpGet("{id}", Name = "GetProductByIdAsync")]
+        [ProducesResponseType(typeof(Product), 200)]
+        [ProducesResponseType(typeof(Product), 404)]
+        public async Task<IActionResult> GetProductByIdAsync(int id)
+        {
+            var stopwatch = new Stopwatch();
+
+            try
+            {
+                stopwatch.Start();
+                logger.LogInformation($"Getting product {id}...");
+                var product = await database.GetAsync<Product>(id.ToString());
+                if (product != null)
+                {
+                    return new OkObjectResult(product);
+                }
+
+                var products = context.Products.FromSqlRaw(Resources.GetProduct, new SqlParameter
+                {
+                    ParameterName = "@ProductID",
+                    Direction = ParameterDirection.Input,
+                    SqlDbType = SqlDbType.Int,
+                    Value = id
+                });
+                if (products.Any())
+                {
+                    product = products.FirstOrDefault();
+                    var idAsString = product.ProductId.ToString(CultureInfo.InvariantCulture);
+                    await database.SetAsync(idAsString, product);
+                    await database.SetAddAsync(Resources.RedisKeys, idAsString);
+
+                    logger.LogInformation($"Product with id = {product.ProductId} has been successfully retrieved.");
+                    return new OkObjectResult(product);
+                }
+                else
+                {
+                    logger.LogWarning($"No product with id = {id} was found");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = MessageHelper.FormatException(ex);
+                logger.LogError(errorMessage);
+                return StatusCode(400, new { error = errorMessage });
+            }
+            finally
+            {
+                stopwatch.Stop();
+                logger.LogInformation($"GetProductByIdAsync method completed in {stopwatch.ElapsedMilliseconds} ms.");
+            }
+        }
+
+        /// <summary>
+        /// Creates a new product.
+        /// </summary>
+        /// <remarks>
+        /// </remarks>
+        /// <param name="product">Product to create.</param>
+        /// <returns>If the operation succeeds, it returns the newly created product.</returns>
+        /// <response code="201">Product successfully created.</response>
+        /// <response code="400">Product is null.</response>     
+        [HttpPost]
+        [ProducesResponseType(typeof(Product), 201)]
+        [ProducesResponseType(typeof(Product), 400)]
+        public async Task<IActionResult> CreateProductAsync(Product product)
+        {
+            var stopwatch = new Stopwatch();
+
+            try
+            {
+                stopwatch.Start();
+                if (product == null)
+                {
+                    logger.LogWarning("Product cannot be null.");
+                    return BadRequest();
+                }
+
+                var productIdParameter = new SqlParameter
+                {
+                    ParameterName = "@ProductID",
+                    Direction = ParameterDirection.Output,
+                    SqlDbType = SqlDbType.Int
+                };
+
+                var result = await context.Database.ExecuteSqlRawAsync(Resources.AddProduct, new SqlParameter[] {
+                    productIdParameter,
+                    new SqlParameter
+                    {
+                        ParameterName = "@Name",
+                        Direction = ParameterDirection.Input,
+                        SqlDbType = SqlDbType.NVarChar,
+                        Size = 50,
+                        Value = product.Name
+                    },
+                    new SqlParameter
+                    {
+                        ParameterName = "@Category",
+                        Direction = ParameterDirection.Input,
+                        SqlDbType = SqlDbType.NVarChar,
+                        Size = 50,
+                        Value = product.Category
+                    },
+                    new SqlParameter
+                    {
+                        ParameterName = "@Price",
+                        Direction = ParameterDirection.Input,
+                        SqlDbType = SqlDbType.SmallMoney,
+                        Value = product.Price
+                    }
+                });
+                if (result ==1 && productIdParameter.Value != null)
+                {
+                    product.ProductId = (int)productIdParameter.Value;
+                    var idAsString = product.ProductId.ToString(CultureInfo.InvariantCulture);
+                    await database.SetAsync(idAsString, product);
+                    await database.SetAddAsync(Resources.RedisKeys, idAsString);
+                    
+                    logger.LogInformation($"Product with id = {product.ProductId} has been successfully created.");
+                    return CreatedAtRoute("GetProductByIdAsync", new { id = product.ProductId }, product);
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = MessageHelper.FormatException(ex);
+                logger.LogError(errorMessage);
+                return StatusCode(400, new { error = errorMessage });
+            }
+            finally
+            {
+                stopwatch.Stop();
+                logger.LogInformation($"CreateProductAsync method completed in {stopwatch.ElapsedMilliseconds} ms.");
+            }
+        }
+
+        /// <summary>
+        /// Updates a product. 
+        /// </summary>
+        /// <param name="id">The id of the product.</param>
+        /// <param name="product">Product to update.</param>
+        /// <returns>No content.</returns>
+        /// <response code="204">No content if the product is successfully updated.</response>
+        /// <response code="404">If the product is not found.</response>
+        [HttpPut("{id}")]
+        [ProducesResponseType(typeof(Product), 204)]
+        [ProducesResponseType(typeof(Product), 404)]
+        public async Task<IActionResult> Update(int id, [FromBody] Product product)
+        {
+            var stopwatch = new Stopwatch();
+
+            try
+            {
+                stopwatch.Start();
+                if (product == null || product.ProductId != id)
+                {
+                    logger.LogWarning("The product is null or its id is different from the id in the payload.");
+                    return BadRequest();
+                }
+
+                var result = await context.Database.ExecuteSqlRawAsync(Resources.UpdateProduct, new SqlParameter[] {
+                    new SqlParameter
+                    {
+                        ParameterName = "@ProductID",
+                        Direction = ParameterDirection.Input,
+                        SqlDbType = SqlDbType.Int,
+                        Value = product.ProductId
+                    },
+                    new SqlParameter
+                    {
+                        ParameterName = "@Name",
+                        Direction = ParameterDirection.Input,
+                        SqlDbType = SqlDbType.NVarChar,
+                        Size = 50,
+                        Value = product.Name
+                    },
+                    new SqlParameter
+                    {
+                        ParameterName = "@Category",
+                        Direction = ParameterDirection.Input,
+                        SqlDbType = SqlDbType.NVarChar,
+                        Size = 50,
+                        Value = product.Category
+                    },
+                    new SqlParameter
+                    {
+                        ParameterName = "@Price",
+                        Direction = ParameterDirection.Input,
+                        SqlDbType = SqlDbType.SmallMoney,
+                        Value = product.Price
+                    }
+                });
+
+                if (result == 1)
+                {
+                    var idAsString = id.ToString(CultureInfo.InvariantCulture);
+                    await database.SetAsync(idAsString, product);
+                    await database.SetAddAsync(Resources.RedisKeys, idAsString);
+
+                    logger.LogInformation("Product with id = {ID} has been successfully updated.", product.ProductId);
+                }
+                return new NoContentResult();
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = MessageHelper.FormatException(ex);
+                logger.LogError(errorMessage);
+                return StatusCode(400, new { error = errorMessage });
+            }
+            finally
+            {
+                stopwatch.Stop();
+                logger.LogInformation($"Update method completed in {stopwatch.ElapsedMilliseconds} ms.");
+            }
+        }
+
+        /// <summary>
+        /// Deletes a specific product.
+        /// </summary>
+        /// <param name="id">The id of the product.</param>      
+        /// <returns>No content.</returns>
+        /// <response code="202">No content if the product is successfully deleted.</response>
+        /// <response code="404">If the product is not found.</response>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(typeof(Product), 204)]
+        [ProducesResponseType(typeof(Product), 404)]
+        public async Task<IActionResult> Delete(string id)
+        {
+            var stopwatch = new Stopwatch();
+
+            try
+            {
+                stopwatch.Start();
+
+                var result = await context.Database.ExecuteSqlRawAsync(Resources.DeleteProduct, new SqlParameter[] {
+                    new SqlParameter
+                    {
+                        ParameterName = "@ProductID",
+                        Direction = ParameterDirection.Input,
+                        SqlDbType = SqlDbType.Int,
+                        Value = id
+                    }
+                });
+
+                if (result == 1)
+                {
+                    var idAsString = id.ToString(CultureInfo.InvariantCulture);
+                    await database.KeyDeleteAsync(idAsString);
+                    await database.SetRemoveAsync(Resources.RedisKeys, idAsString);
+
+                    logger.LogInformation("Product with id = {ID} has been successfully deleted.", id);
+                }
+                return new NoContentResult();
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = MessageHelper.FormatException(ex);
+                logger.LogError(errorMessage);
+                return StatusCode(400, new { error = errorMessage });
+            }
+            finally
+            {
+                stopwatch.Stop();
+                logger.LogInformation($"Delete method completed in {stopwatch.ElapsedMilliseconds} ms.");
+            }
+        }
+        #endregion
+    }
+}
+```
+
+## Deploy the code of the ASP.NET Core application
+
+Once the Azure resources have been deployed to Azure (which can take about 10-12 minutes), you need to deploy the ASP.NET Core web application contained in the `src` folder to the newly created Azure App Service. Azure App Service provides an Advanced Tool (Kudu) site that you can use to manage web app deployments. This site is accessed from a URL like: <WEB_APP_NAME>.scm.azurewebsites.net. You can use [Visual Studio Code](https://code.visualstudio.com/) or [Visual Studio](https://visualstudio.microsoft.com/) to deploy the code of the companion ASP.NET application to the Azure App Service created by the ARM template.
 
 ## Test the Application
 

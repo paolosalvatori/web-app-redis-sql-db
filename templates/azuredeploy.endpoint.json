@@ -49,7 +49,41 @@
         "description": "Specifies the name of the Application Insights used by the Web App."
       }
     },
-    "fwebAppContentStorageAccountName": {
+    "publicNetworkAccessForIngestion": {
+      "type": "string",
+      "defaultValue": "Disabled",
+      "allowedValues": [
+        "Enabled",
+        "Disabled"
+      ],
+      "metadata": {
+        "description": "Specifies the network access type for accessing Application Insights ingestion. Possible values: Enabled or Disabled."
+      }
+    },
+    "publicNetworkAccessForQuery": {
+      "type": "string",
+      "defaultValue": "Disabled",
+      "allowedValues": [
+        "Enabled",
+        "Disabled"
+      ],
+      "metadata": {
+        "description": "Specifies the network access type for accessing Application Insights query. Possible values: Enabled or Disabled."
+      }
+    },
+    "ingestionMode": {
+      "type": "string",
+      "defaultValue": "LogAnalytics",
+      "allowedValues": [
+        "LogAnalytics",
+        "ApplicationInsights",
+        "ApplicationInsightsWithDiagnosticSettings"
+      ],
+      "metadata": {
+        "description": "Indicates the flow of the Application Insights ingestion. Possible values: LogAnalytics, ApplicationInsights, or ApplicationInsightsWithDiagnosticSettings."
+      }
+    },
+    "webAppContentStorageAccountName": {
       "type": "string",
       "defaultValue": "[concat('webapp', uniquestring(resourceGroup().id))]",
       "metadata": {
@@ -61,6 +95,31 @@
       "defaultValue": "[concat('boot', uniquestring(resourceGroup().id))]",
       "metadata": {
         "description": "Specifies the name of the storage account used to store the boot diagnostics logs of the virtual machine."
+      }
+    },
+    "networkAclsDefaultAction": {
+      "type": "string",
+      "defaultValue": "Deny",
+      "allowedValues": [
+        "Allow",
+        "Deny"
+      ],
+      "metadata": {
+        "description": "Specifies the default action of allow or deny when no other rules match for the storage account."
+      }
+    },
+    "allowBlobPublicAccess": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Allow or disallow public access to all blobs or containers in the  storage account. The default interpretation is true for this property."
+      }
+    },
+    "supportsHttpsTrafficOnly": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Allows https traffic only to storage service if sets to true. The default value is true since API version 2019-04-01."
       }
     },
     "vmName": {
@@ -498,11 +557,159 @@
         "description": "Specifies whether the autoscale policy is enabled or disabled."
       }
     },
-    "retentionDays": {
+    "retentionPolicy": {
+      "type": "object",
+      "defaultValue": {
+        "enabled": true,
+        "days": 90
+      },
+      "metadata": {
+        "description": "Specifies the retention policy."
+      }
+    },
+    "keyVaultName": {
+      "type": "string",
+      "defaultValue": "[concat('keyvault', uniqueString(resourceGroup().id))]",
+      "metadata": {
+        "description": "Specifies the name of the key vault."
+      }
+    },
+    "enabledForDeployment": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies whether Azure Virtual Machines are permitted to retrieve certificates stored as secrets from the key vault."
+      }
+    },
+    "enabledForDiskEncryption": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies whether Azure Disk Encryption is permitted to retrieve secrets from the vault and unwrap keys."
+      }
+    },
+    "enabledForTemplateDeployment": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies whether Azure Resource Manager is permitted to retrieve secrets from the key vault."
+      }
+    },
+    "enableSoftDelete": {
+      "type": "bool",
+      "defaultValue": true,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Specifies whether the 'soft delete' functionality is enabled for this key vault. If it's not set to any value(true or false) when creating new key vault, it will be set to true by default. Once set to true, it cannot be reverted to false."
+      }
+    },
+    "softDeleteRetentionInDays": {
       "type": "int",
       "defaultValue": 90,
       "metadata": {
-        "description": "Specifies the retention period in days."
+        "description": "Specifies the softDelete data retention days. It accepts >=7 and <=90."
+      }
+    },
+    "enableRbacAuthorization": {
+      "type": "bool",
+      "defaultValue": false,
+      "allowedValues": [
+        true,
+        false
+      ],
+      "metadata": {
+        "description": "Controls how data actions are authorized. When true, the key vault will use Role Based Access Control (RBAC) for authorization of data actions, and the access policies specified in vault properties will be ignored (warning: this is a preview feature). When false, the key vault will use the access policies specified in vault properties, and any policy stored on Azure Resource Manager will be ignored. If null or not specified, the vault is created with the default value of false. Note that management actions are always authorized with RBAC."
+      }
+    },
+    "tenantId": {
+      "type": "string",
+      "defaultValue": "[subscription().tenantId]",
+      "metadata": {
+        "description": "Specifies the Azure Active Directory tenant ID that should be used for authenticating requests to the key vault. Get it by using Get-AzSubscription cmdlet."
+      }
+    },
+    "keysPermissions": {
+      "type": "array",
+      "defaultValue": [
+        "get",
+        "list"
+      ],
+      "metadata": {
+        "description": "Specifies the permissions to keys in the vault. Valid values are: all, encrypt, decrypt, wrapKey, unwrapKey, sign, verify, get, list, create, update, import, delete, backup, restore, recover, and purge."
+      }
+    },
+    "secretsPermissions": {
+      "type": "array",
+      "defaultValue": [
+        "get",
+        "list"
+      ],
+      "metadata": {
+        "description": "Specifies the permissions to secrets in the vault. Valid values are: all, get, list, set, delete, backup, restore, recover, and purge."
+      }
+    },
+    "certificatesPermissions": {
+      "type": "array",
+      "defaultValue": [
+        "get",
+        "list"
+      ],
+      "metadata": {
+        "description": "Specifies the permissions to certificates in the vault. Valid values are: all, get, list, set, delete, managecontacts, getissuers, listissuers, setissuers, deleteissuers, manageissuers, backup, and recover."
+      }
+    },
+    "skuName": {
+      "type": "string",
+      "defaultValue": "Standard",
+      "allowedValues": [
+        "Standard",
+        "Premium"
+      ],
+      "metadata": {
+        "description": "Specifies whether the key vault is a standard vault or a premium vault."
+      }
+    },
+    "keyVaultPrivateEndpointName": {
+      "type": "string",
+      "defaultValue": "KeyVaultPrivateEndpoint",
+      "metadata": {
+        "description": "Specifies the name of the private link to key vault."
+      }
+    },
+    "sqlServerConnectionStringSecretName": {
+      "type": "string",
+      "defaultValue": "ConnectionStrings--SqlServerConnectionString",
+      "metadata": {
+        "description": "Specifies the name of the secret that contains the SQL Server connection string."
+      }
+    },
+    "redisCacheConnectionStringSecretName": {
+      "type": "string",
+      "defaultValue": "ConnectionStrings--RedisCacheConnectionString",
+      "metadata": {
+        "description": "Specifies the name of the secret that contains the Azure Cache for Redis connection string."
+      }
+    },
+    "applicationInsightsConnectionStringSecretName": {
+      "type": "string",
+      "defaultValue": "ApplicationInsights--ConnectionString",
+      "metadata": {
+        "description": "Specifies the name of the secret that contains the Application Insights connection string."
       }
     }
   },
@@ -510,21 +717,25 @@
     "storageBlobDNSZoneForwarder": "[concat('.blob.', environment().suffixes.storage)]",
     "sqlServerDNSZoneForwarder": "[environment().suffixes.sqlServerHostname]",
     "redisCacheDNSZoneForwarder": ".redis.cache.windows.net",
+    "keyVaultPublicDNSZoneForwarder": "[if(equals(toLower(environment().name), 'azureusgovernment'), '.vaultcore.usgovcloudapi.net', '.vaultcore.azure.net')]",
 
     "storageBlobPrivateDnsZoneName": "[concat('privatelink', variables('storageBlobDNSZoneForwarder'))]",
     "sqlServerPrivateDnsZoneName": "[concat('privatelink', variables('sqlServerDNSZoneForwarder'))]",
     "redisCachePrivateDnsZoneName": "[concat('privatelink', variables('redisCacheDNSZoneForwarder'))]",
+    "keyVaultPrivateDnsZoneName": "[concat('privatelink', variables('keyVaultPublicDNSZoneForwarder'))]",
 
     "storageBlobPrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('storageBlobPrivateDnsZoneName'))]",
     "sqlServerPrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('sqlServerPrivateDnsZoneName'))]",
     "redisCachePrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('redisCachePrivateDnsZoneName'))]",
+    "keyVaultPrivateDnsZoneId": "[resourceId('Microsoft.Network/privateDnsZones', variables('keyVaultPrivateDnsZoneName'))]",
 
     "vmDiagnosticStorageAccountPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', parameters('vmDiagnosticStorageAccountPrivateEndpointName'))]",
     "sqlServerPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', parameters('sqlServerPrivateEndpointName'))]",
     "redisCachePrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', parameters('redisCachePrivateEndpointName'))]",
+    "keyVaultPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', parameters('keyVaultPrivateEndpointName'))]",
 
     "vmDiagnosticStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('vmDiagnosticStorageAccountName'))]",
-    "webAppContentStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('fwebAppContentStorageAccountName'))]",
+    "webAppContentStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('webAppContentStorageAccountName'))]",
     "sqlServerId": "[resourceId('Microsoft.Sql/servers', toLower(parameters('sqlServerName')))]",
     "sqlServerDatabaseId": "[resourceId('Microsoft.Sql/servers/databases', parameters('sqlServerName'), parameters('sqlServerDatabaseName'))]",
     "redisCacheId": "[resourceId('Microsoft.Cache/Redis', toLower(parameters('redisCacheName')))]",
@@ -536,6 +747,7 @@
     "bastionPublicIPAddressId": "[resourceId('Microsoft.Network/publicIPAddresses', variables('bastionPublicIPAddressName'))]",
     "dnsLabelPrefix": "[concat('vm', uniqueString(resourceGroup().id))]",
     "bastionHostId": "[resourceId('Microsoft.Network/bastionHosts', parameters('bastionHostName'))]",
+    "keyVaultId": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
 
     "vmNicId": "[resourceId('Microsoft.Network/networkInterfaces', variables('vmNicName'))]",
     "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
@@ -551,7 +763,9 @@
     "virtualMachineSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('virtualMachineSubnetName'))]",
     "bastionSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('bastionSubnetName'))]",
     "webAppSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('webAppSubnetName'))]",
-    "privateEndpointSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('privateEndpointSubnetName'))]"
+    "privateEndpointSubnetId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworkName'), parameters('privateEndpointSubnetName'))]",
+
+    "keyVaultUri": "[concat('https://', toLower(parameters('keyVaultName')), if(equals(toLower(environment().name), 'azureusgovernment'), '.vault.usgovcloudapi.net', '.vault.azure.net'), '/')]"
   },
   "resources": [
     {
@@ -564,13 +778,19 @@
       },
       "kind": "StorageV2",
       "properties": {
+        "networkAcls": {
+          "defaultAction": "[parameters('networkAclsDefaultAction')]",
+          "bypass": "AzureServices"
+        },
+        "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]",
+        "supportsHttpsTrafficOnly": "[parameters('supportsHttpsTrafficOnly')]"
       }
     },
     {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2019-06-01",
       "location": "[parameters('location')]",
-      "name": "[parameters('fwebAppContentStorageAccountName')]",
+      "name": "[parameters('webAppContentStorageAccountName')]",
       "sku": {
         "name": "Standard_LRS",
         "tier": "Standard"
@@ -581,7 +801,7 @@
           "bypass": "AzureServices",
           "defaultAction": "Allow"
         },
-        "supportsHttpsTrafficOnly": true
+        "supportsHttpsTrafficOnly": "[parameters('supportsHttpsTrafficOnly')]"
       }
     },
     {
@@ -1065,7 +1285,10 @@
         "Application_Type": "web",
         "SamplingPercentage": 100,
         "DisableIpMasking": true,
-        "WorkspaceResourceId": "[variables('workspaceId')]"
+        "WorkspaceResourceId": "[variables('workspaceId')]",
+        "publicNetworkAccessForIngestion": "[parameters('publicNetworkAccessForIngestion')]",
+        "publicNetworkAccessForQuery":  "[parameters('publicNetworkAccessForQuery')]",
+        "IngestionMode":  "[parameters('ingestionMode')]"
       }
     },
     {
@@ -1094,6 +1317,17 @@
       "type": "Microsoft.Network/privateDnsZones",
       "apiVersion": "2020-06-01",
       "name": "[variables('redisCachePrivateDnsZoneName')]",
+      "location": "global",
+      "properties": {
+        "maxNumberOfRecordSets": 25000,
+        "maxNumberOfVirtualNetworkLinks": 1000,
+        "maxNumberOfVirtualNetworkLinksWithRegistration": 100
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('keyVaultPrivateDnsZoneName')]",
       "location": "global",
       "properties": {
         "maxNumberOfRecordSets": 25000,
@@ -1140,6 +1374,22 @@
       "location": "global",
       "dependsOn": [
         "[variables('redisCachePrivateDnsZoneId')]",
+        "[variables('vnetId')]"
+      ],
+      "properties": {
+        "registrationEnabled": false,
+        "virtualNetwork": {
+          "id": "[variables('vnetId')]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+      "apiVersion": "2020-06-01",
+      "name": "[concat(variables('keyVaultPrivateDnsZoneName'), '/link_to_', toLower(parameters('virtualNetworkName')))]",
+      "location": "global",
+      "dependsOn": [
+        "[variables('keyVaultPrivateDnsZoneId')]",
         "[variables('vnetId')]"
       ],
       "properties": {
@@ -1294,6 +1544,54 @@
       ]
     },
     {
+      "type": "Microsoft.Network/privateEndpoints",
+      "name": "[parameters('keyVaultPrivateEndpointName')]",
+      "apiVersion": "2020-07-01",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('keyVaultId')]",
+        "[variables('vnetId')]"
+      ],
+      "properties": {
+        "subnet": {
+          "id": "[variables('privateEndpointSubnetId')]"
+        },
+        "privateLinkServiceConnections": [
+          {
+            "name": "[parameters('vmDiagnosticStorageAccountPrivateEndpointName')]",
+            "properties": {
+              "privateLinkServiceId": "[variables('keyVaultId')]",
+              "groupIds": [
+                "vault"
+              ]
+            }
+          }
+        ]
+      },
+      "resources": [
+        {
+          "type": "privateDnsZoneGroups",
+          "apiVersion": "2020-07-01",
+          "location": "[parameters('location')]",
+          "name": "KeyVaultPrivateDnsZoneGroup",
+          "dependsOn": [
+            "[variables('keyVaultPrivateDnsZoneId')]",
+            "[variables('keyVaultPrivateEndpointId')]"
+          ],
+          "properties": {
+            "privateDnsZoneConfigs": [
+              {
+                "name": "dnsConfiguration",
+                "properties": {
+                  "privateDnsZoneId": "[variables('keyVaultPrivateDnsZoneId')]"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "type": "Microsoft.Network/bastionHosts",
       "name": "[parameters('bastionHostName')]",
       "apiVersion": "2020-05-01",
@@ -1334,10 +1632,7 @@
               {
                 "category": "BastionAuditLogs",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               }
             ]
           }
@@ -1421,18 +1716,12 @@
               {
                 "category": "NetworkSecurityGroupEvent",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               },
               {
                 "category": "NetworkSecurityGroupRuleCounter",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               }
             ]
           }
@@ -1533,10 +1822,7 @@
                 "category": "AllMetrics",
                 "timeGrain": "PT1M",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               }
             ]
           }
@@ -1551,16 +1837,20 @@
       "dependsOn": [
         "[variables('hostingPlanId')]",
         "[variables('webAppContentStorageAccountId')]",
-        "[variables('vnetId')]",
-        "[variables('redisCacheId')]"
+        "[variables('vnetId')]"
       ],
       "tags": {
         "displayName": "Website"
       },
       "kind": "app",
+      "identity": {
+        "type": "SystemAssigned"
+      },
       "properties": {
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('hostingPlanName'))]",
         "siteConfig": {
+          "httpLoggingEnabled": true,
+          "detailedErrorLoggingEnabled": true,
           "appSettings": [
             {
               "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
@@ -1572,7 +1862,7 @@
             },
             {
               "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('fwebAppContentStorageAccountName'),';AccountKey=',listkeys(variables('webAppContentStorageAccountId'), '2019-06-01').keys[0].value,';')]"
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('webAppContentStorageAccountName'),';AccountKey=',listkeys(variables('webAppContentStorageAccountId'), '2019-06-01').keys[0].value,';')]"
             },
             {
               "name": "WEBSITE_CONTENTSHARE",
@@ -1587,12 +1877,8 @@
               "value": "168.63.129.16"
             },
             {
-              "name": "SQL_DB_CONNECTION_STRING",
-              "value": "[concat('Data Source=tcp:', reference(variables('sqlServerId')).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('sqlServerDatabaseName'), ';User Id=', parameters('sqlServerAdministratorName'), '@', parameters('sqlServerName'), ';Password=', parameters('sqlServerAdministratorPassword'), ';')]"
-            },
-            {
-              "name": "REDIS_CACHE_CONNECTION_STRING",
-              "value": "[concat(toLower(parameters('redisCacheName')),'.redis.cache.windows.net:6380,abortConnect=false,ssl=True,sslprotocols=tls12,password=', listKeys(variables('redisCacheId'), '2019-07-01').primaryKey)]"
+              "name": "KeyVaultUri",
+              "value": "[variables('keyVaultUri')]"
             }
           ]
         }
@@ -1624,66 +1910,42 @@
               {
                 "category": "AppServiceAntivirusScanAuditLogs",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               },
               {
                 "category": "AppServiceHTTPLogs",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               },
               {
                 "category": "AppServiceConsoleLogs",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               },
               {
                 "category": "AppServiceAppLogs",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               },
               {
                 "category": "AppServiceFileAuditLogs",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               },
               {
                 "category": "AppServiceAuditLogs",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               },
               {
                 "category": "AppServiceIPSecAuditLogs",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               },
               {
                 "category": "AppServicePlatformLogs",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               }
             ],
             "metrics": [
@@ -1691,10 +1953,7 @@
                 "category": "AllMetrics",
                 "timeGrain": "PT1M",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               }
             ]
           }
@@ -1765,10 +2024,7 @@
                 "category": "AllMetrics",
                 "timeGrain": "PT1M",
                 "enabled": true,
-                "retentionPolicy": {
-                  "enabled": true,
-                  "days": "[parameters('retentionDays')]"
-                }
+                "retentionPolicy": "[parameters('retentionPolicy')]"
               }
             ],
             "logs": []
@@ -1856,107 +2112,181 @@
                     "category": "Basic",
                     "timeGrain": "PT1M",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   },
                   {
                     "category": "InstanceAndAppAdvanced",
                     "timeGrain": "PT1M",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   },
                   {
                     "category": "WorkloadManagement",
                     "timeGrain": "PT1M",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   }
                 ],
                 "logs": [
                   {
                     "category": "SQLInsights",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   },
                   {
                     "category": "AutomaticTuning",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   },
                   {
                     "category": "QueryStoreRuntimeStatistics",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   },
                   {
                     "category": "QueryStoreWaitStatistics",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   },
                   {
                     "category": "Errors",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   },
                   {
                     "category": "DatabaseWaitStatistics",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   },
                   {
                     "category": "Timeouts",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   },
                   {
                     "category": "Blocks",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   },
                   {
                     "category": "Deadlocks",
                     "enabled": true,
-                    "retentionPolicy": {
-                      "enabled": true,
-                      "days": "[parameters('retentionDays')]"
-                    }
+                    "retentionPolicy": "[parameters('retentionPolicy')]"
                   }
                 ]
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "2019-09-01",
+      "type": "Microsoft.KeyVault/vaults",
+      "name": "[parameters('keyVaultName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[variables('webAppId')]"
+      ],
+      "properties": {
+        "tenantId": "[parameters('tenantId')]",
+        "sku": {
+          "name": "[parameters('skuName')]",
+          "family": "A"
+        },
+        "enabledForDeployment": "[parameters('enabledForDeployment')]",
+        "enabledForTemplateDeployment": "[parameters('enabledForTemplateDeployment')]",
+        "enabledForDiskEncryption": "[parameters('enabledForDiskEncryption')]",
+        "enableSoftDelete": "[parameters('enableSoftDelete')]",
+        "softDeleteRetentionInDays": "[parameters('softDeleteRetentionInDays')]",
+        "enableRbacAuthorization": "[parameters('enableRbacAuthorization')]",
+        "accessPolicies": [
+          {
+            "tenantId": "[parameters('tenantId')]",
+            "objectId": "[reference(variables('webAppId'), '2020-09-01', 'Full').identity.principalId]",
+            "permissions": {
+              "keys": "[parameters('keysPermissions')]",
+              "secrets": "[parameters('secretsPermissions')]",
+              "certificates": "[parameters('certificatesPermissions')]"
+            }
+          }
+        ]
+      },
+      "resources": [
+        {
+          "type": "secrets",
+          "apiVersion": "2019-09-01",
+          "name": "[parameters('sqlServerConnectionStringSecretName')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[variables('keyVaultId')]",
+            "[variables('sqlServerId')]"
+          ],
+          "tags": {
+            "workload": "[parameters('webAppName')]"
+          },
+          "properties": {
+            "value": "[concat('Data Source=tcp:', reference(variables('sqlServerId')).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('sqlServerDatabaseName'), ';User Id=', parameters('sqlServerAdministratorName'), '@', parameters('sqlServerName'), ';Password=', parameters('sqlServerAdministratorPassword'), ';')]"
+          }
+        },
+        {
+          "type": "secrets",
+          "apiVersion": "2019-09-01",
+          "name": "[parameters('redisCacheConnectionStringSecretName')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[variables('keyVaultId')]",
+            "[variables('redisCacheId')]"
+          ],
+          "tags": {
+            "workload": "[parameters('webAppName')]"
+          },
+          "properties": {
+            "value": "[concat(parameters('redisCacheName'),'.redis.cache.windows.net:6380,abortConnect=false,ssl=True,sslprotocols=tls12,password=', listKeys(variables('redisCacheId'), '2019-07-01').primaryKey)]"
+          }
+        },
+        {
+          "type": "secrets",
+          "apiVersion": "2019-09-01",
+          "name": "[parameters('applicationInsightsConnectionStringSecretName')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[variables('keyVaultId')]",
+            "[variables('applicationInsightsId')]"
+          ],
+          "tags": {
+            "workload": "[parameters('webAppName')]"
+          },
+          "properties": {
+            "value": "[concat('InstrumentationKey=', reference(variables('applicationInsightsId'), '2020-02-02-preview').instrumentationKey)]"
+          }
+        },
+        {
+          "type": "providers/diagnosticsettings",
+          "name": "Microsoft.Insights/service",
+          "apiVersion": "2017-05-01-preview",
+          "dependsOn": [
+            "[variables('keyVaultId')]",
+            "[variables('workspaceId')]"
+          ],
+          "properties": {
+            "workspaceId": "[variables('workspaceId')]",
+            "logs": [
+              {
+                "category": "AuditEvent",
+                "enabled": true,
+                "retentionPolicy": "[parameters('retentionPolicy')]"
+              }
+            ],
+            "metrics": [
+              {
+                "category": "AllMetrics",
+                "timeGrain": "PT1M",
+                "enabled": true,
+                "retentionPolicy": "[parameters('retentionPolicy')]"
+              }
+            ]
+          }
         }
       ]
     }

@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace ProductStore.Properties {
+namespace Products.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace ProductStore.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ProductStore.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Products.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,6 +61,33 @@ namespace ProductStore.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to EXEC [dbo].[AddProduct] @ProductID OUTPUT, @Name, @Category, @Price.
+        /// </summary>
+        internal static string AddProduct {
+            get {
+                return ResourceManager.GetString("AddProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to APPINSIGHTS_CONNECTIONSTRING.
+        /// </summary>
+        internal static string ApplicationInsightsConnectionString {
+            get {
+                return ResourceManager.GetString("ApplicationInsightsConnectionString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to EXEC [dbo].[DeleteProduct] @ProductID.
+        /// </summary>
+        internal static string DeleteProduct {
+            get {
+                return ResourceManager.GetString("DeleteProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} Exception: [{1}] InnerException: [{2}].
         /// </summary>
         internal static string ExceptionFormat {
@@ -70,11 +97,38 @@ namespace ProductStore.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to EXEC [dbo].[GetProduct] @ProductID.
+        /// </summary>
+        internal static string GetProduct {
+            get {
+                return ResourceManager.GetString("GetProduct", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to EXEC [dbo].[GetProducts].
+        /// </summary>
+        internal static string GetProducts {
+            get {
+                return ResourceManager.GetString("GetProducts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to In.
         /// </summary>
         internal static string In {
             get {
                 return ResourceManager.GetString("In", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to KeyVaultUri.
+        /// </summary>
+        internal static string KeyVaultUri {
+            get {
+                return ResourceManager.GetString("KeyVaultUri", resourceCulture);
             }
         }
         
@@ -102,6 +156,33 @@ namespace ProductStore.Properties {
         internal static string Out {
             get {
                 return ResourceManager.GetString("Out", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RedisCacheConnectionString.
+        /// </summary>
+        internal static string RedisCacheConnectionString {
+            get {
+                return ResourceManager.GetString("RedisCacheConnectionString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to RedisKeys.
+        /// </summary>
+        internal static string RedisKeys {
+            get {
+                return ResourceManager.GetString("RedisKeys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SqlServerConnectionString.
+        /// </summary>
+        internal static string SqlServerConnectionString {
+            get {
+                return ResourceManager.GetString("SqlServerConnectionString", resourceCulture);
             }
         }
         
@@ -147,6 +228,15 @@ namespace ProductStore.Properties {
         internal static string Unknown {
             get {
                 return ResourceManager.GetString("Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to EXEC [dbo].[UpdateProduct] @ProductID, @Name, @Category, @Price.
+        /// </summary>
+        internal static string UpdateProduct {
+            get {
+                return ResourceManager.GetString("UpdateProduct", resourceCulture);
             }
         }
     }
