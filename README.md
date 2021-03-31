@@ -55,7 +55,7 @@ The ARM template deploys the following resources:
 - An ADLS Gen 2 storage account used to store the boot diagnostics logs of the virtual machine as blobs
 - An ADLS Gen 2 storage account where the code and configuration of the Azure Web App are stored. For more information, see [WEBSITE_CONTENTAZUREFILECONNECTIONSTRING](https://docs.microsoft.com/it-it/azure/azure-functions/functions-app-settings#website_contentazurefileconnectionstring).
 - An Premium App Service Plan hosting the Azure Web App app. For more information, see [Azure App Service plan overview](https://docs.microsoft.com/en-us/azure/app-service/overview-hosting-plans).
-- An Azure App Service containing an ASP.NET Web App that uses Azure Cache for Redis to cache the data of a Products table hosted in [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview).
+- An Azure App Service containing an ASP.NET Core application that uses a system-assigned managed identity to read settings from Key vault, stores data in [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview), and caches items in Azure Cache for Redis.
 - An Application Insights resource used by the Azure Web Apps app to store logs, traces, requests, exceptions, and metrics. For more information, see [Monitor Azure Web Apps](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring).
 - An Azure SQL Server and [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview) hosting the ProductDB relational database used by the Web App.
 - An Azure Key Vault used to store the following application settings. These settings are automtically created by the ARM template as secrets in Azure Key Vault:
@@ -98,7 +98,7 @@ The ARM template deploys the following resources:
 - An ADLS Gen 2 storage account used to store the boot diagnostics logs of the virtual machine as blobs
 - An ADLS Gen 2 storage account where the code and configuration of the Azure Web App are stored. For more information, see [WEBSITE_CONTENTAZUREFILECONNECTIONSTRING](https://docs.microsoft.com/it-it/azure/azure-functions/functions-app-settings#website_contentazurefileconnectionstring).
 - An Premium App Service Plan hosting the Azure Web App app. For more information, see [Azure App Service plan overview](https://docs.microsoft.com/en-us/azure/app-service/overview-hosting-plans).
-- An Azure App Service containing an ASP.NET Web App that uses Azure Cache for Redis to cache the data of a Products table hosted in [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview).
+- An Azure App Service containing an ASP.NET Core application that uses a system-assigned managed identity to read settings from Key vault, stores data in [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview), and caches items in Azure Cache for Redis.
 - An Application Insights resource used by the Azure Web Apps app to store logs, traces, requests, exceptions, and metrics. For more information, see [Monitor Azure Web Apps](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring).
 - An Azure SQL Server and [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview) hosting the ProductDB relational database used by the Web App.
 - An Azure Key Vault used to store the following application settings. These settings are automtically created by the ARM template as secrets in Azure Key Vault:
@@ -349,7 +349,7 @@ This sample provides an ASP.NET Core single-page application (SPA) to test the t
 - Azure SQL Database connection string
 - Application Insights Instrumentation Key
 
-application settings from Azure Key Vault using the following code defined in the `Program` class. For more information, see [Azure Key Vault configuration provider in ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/security/key-vault-configuration?view=aspnetcore-5.0).
+application settings from Azure Key Vault using the following code defined in the `Program` class. For more information, see [Azure Key Vault configuration provider in ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/security/key-vault-configuration?view=aspnetcore-5.0). The application uses the system-assigned managed identity of the App Service to access secrets from Azure Key Vault. The ARM template creates Key Vault, the secrets used application settings by the ASP.NET Core aaplication, and the access policies to grant permissions on secrets to the system-assigned managed identity. For more information, see [How to use managed identities for App Service and Azure Functions](https://docs.microsoft.com/en-us/azure/app-service/overview-managed-identity?tabs=dotnet).
 
 ### Program.cs
 
