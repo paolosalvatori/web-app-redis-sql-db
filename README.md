@@ -58,18 +58,26 @@ The ARM template deploys the following resources:
 - An Azure App Service containing an ASP.NET Web App that uses Azure Cache for Redis to cache the data of a Products table hosted in [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview).
 - An Application Insights resource used by the Azure Web Apps app to store logs, traces, requests, exceptions, and metrics. For more information, see [Monitor Azure Web Apps](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring).
 - An Azure SQL Server and [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview) hosting the ProductDB relational database used by the Web App.
+- An Azure Key Vault used to store the following application settings. These settings are automtically created by the ARM template as secrets in Azure Key Vault:
+
+  - Azure Cache for Redis connection string
+  - Azure SQL Database connection string
+  - Application Insights Instrumentation Key
+
 - A private endpoint to the:
 
   - Azure Blob storage account (boot diagnostics logs)
   - Azure Cache for Redis
   - Azure SQL Database
+  - Azure Key Vault
 
 - A Private DNS Zone Group to link each private endpoint with the corresponding Private DNS Zone.
 - The NIC used by the jumpbox virtual machine and for each private endpoint.
 - A Log Analytics workspace used to monitor the health status of the services such as the hosting plan or NSG.
-- A Private DNS Zone for Azure Blob Storage Account private endpoints (privatelink.blob.core.windows.net)
-- A Private DNS Zone for Azure Cache for Redis private endpoints (privatelink.redis.cache.windows.net)
-- A Private DNS Zone for Azure SQL Database private endpoints (privatelink.database.windows.net)
+- A Private DNS Zone for Azure Blob Storage Account private endpoint (privatelink.blob.core.windows.net)
+- A Private DNS Zone for Azure Cache for Redis private endpoint (privatelink.redis.cache.windows.net)
+- A Private DNS Zone for Azure SQL Database private endpoint (privatelink.database.windows.net)
+- A Private DNS Zone for Azure Key Vault private endpoint (privatelink.vaultcore.azure.net)
 
 The following picture shows the architecture and network topology of the first solution where a Standard Azure Cache for Redis is accessed by an Azure Web App via [Regional VNET Integration](https://docs.microsoft.com/en-us/azure/app-service/web-sites-integrate-with-vnet#regional-vnet-integration) and [Azure Private Endpoints](https://docs.microsoft.com/azure/private-link/private-endpoint-overview).
 
@@ -93,16 +101,24 @@ The ARM template deploys the following resources:
 - An Azure App Service containing an ASP.NET Web App that uses Azure Cache for Redis to cache the data of a Products table hosted in [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview).
 - An Application Insights resource used by the Azure Web Apps app to store logs, traces, requests, exceptions, and metrics. For more information, see [Monitor Azure Web Apps](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring).
 - An Azure SQL Server and [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview) hosting the ProductDB relational database used by the Web App.
+- An Azure Key Vault used to store the following application settings. These settings are automtically created by the ARM template as secrets in Azure Key Vault:
+
+  - Azure Cache for Redis connection string
+  - Azure SQL Database connection string
+  - Application Insights Instrumentation Key
+
 - A private endpoint to the:
 
   - Azure Blob storage account (boot diagnostics logs)
   - Azure SQL Database
+  - Azure Key Vault
 
 - A Private DNS Zone Group to link each private endpoint with the corresponding Private DNS Zone.
 - The NIC used by the jumpbox virtual machine and for each private endpoint.
 - A Log Analytics workspace used to monitor the health status of the services such as the hosting plan or NSG.
-- A Private DNS Zone for Azure Blob Storage Account private endpoints (privatelink.blob.core.windows.net)
-- A Private DNS Zone for Azure SQL Database private endpoints (privatelink.database.windows.net)
+- A Private DNS Zone for Azure Blob Storage Account private endpoint (privatelink.blob.core.windows.net)
+- A Private DNS Zone for Azure SQL Database private endpoint (privatelink.database.windows.net)
+- A Private DNS Zone for Azure Key Vault private endpoint (privatelink.vaultcore.azure.net)
 
 ## Important Notes
 
