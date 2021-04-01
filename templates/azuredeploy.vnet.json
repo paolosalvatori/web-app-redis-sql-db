@@ -412,7 +412,7 @@
         "description": "Specify a boolean value that indicates whether to allow access via non-SSL ports."
       }
     },
-    "publicNetworkAccess": {
+    "redisCachePublicNetworkAccess": {
       "type": "string",
       "defaultValue": "Disabled",
       "allowedValues": [
@@ -499,6 +499,17 @@
       "defaultValue": 4,
       "metadata": {
         "description": "Specifies the capacity of the SQL Server database."
+      }
+    },
+    "sqlServerPublicNetworkAccess": {
+      "type": "string",
+      "defaultValue": "Disabled",
+      "allowedValues": [
+        "Enabled",
+        "Disabled"
+      ],
+      "metadata": {
+        "description": "Specify a boolean value that indicates whether to allow access via non-SSL ports."
       }
     },
     "maxSizeBytes": {
@@ -745,6 +756,17 @@
       "defaultValue": "ApplicationInsights--ConnectionString",
       "metadata": {
         "description": "Specifies the name of the secret that contains the Application Insights connection string."
+      }
+    },
+    "keyVaultPublicNetworkAccess": {
+      "type": "string",
+      "defaultValue": "Deny",
+      "allowedValues": [
+        "Deny",
+        "Allow"
+      ],
+      "metadata": {
+        "description": "Specify a boolean value that indicates whether to allow access via non-SSL ports."
       }
     }
   },
@@ -1964,7 +1986,7 @@
       "properties": {
         "enableNonSslPort": "[parameters('enableNonSslPort')]",
         "minimumTlsVersion": "1.2",
-        "publicNetworkAccess": "[parameters('publicNetworkAccess')]",
+        "publicNetworkAccess": "[parameters('redisCachePublicNetworkAccess')]",
         "replicasPerMaster": "[parameters('redisCacheReplicasPerMaster')]",
         "subnetId": "[variables('redisCacheSubnetId')]",
         "staticIP": "[concat(substring(parameters('redisCacheSubnetAddressPrefix'), 0, lastIndexOf(parameters('redisCacheSubnetAddressPrefix'), '.')), '.4')]",
@@ -2011,7 +2033,7 @@
       "properties": {
         "administratorLogin": "[parameters('sqlServerAdministratorName')]",
         "administratorLoginPassword": "[parameters('sqlServerAdministratorPassword')]",
-        "publicNetworkAccess": "[parameters('publicNetworkAccess')]",
+        "publicNetworkAccess": "[parameters('sqlServerPublicNetworkAccess')]",
         "version": "[parameters('sqlServerVersion')]"
       },
       "resources": [
@@ -2177,7 +2199,11 @@
               "certificates": "[parameters('certificatesPermissions')]"
             }
           }
-        ]
+        ],
+        "networkAcls": {
+          "bypass": "AzureServices",
+          "defaultAction": "[parameters('keyVaultPublicNetworkAccess')]"
+        }
       },
       "resources": [
         {

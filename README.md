@@ -23,6 +23,13 @@ In addition, Azure Web Apps and Http-triggered Azure Web Apps can be configured 
 
 For a similar sample with a non-HTTP-triggered Azure Web App, see [Azure Web Apps, Private Endpoints, and NAT Gateway](https://github.com/paolosalvatori/azure-function-premium-plan).
 
+This sample shows also how to disable the public network access from the internet to all the managed services used by the application:
+
+- Azure Blob Storage Account
+- Azure Key Vault
+- Azure Cache for Redis
+- Azure SQL Database
+
 ## Deploy to Azure
 
 You can use the following button to deploy the demo to your Azure subscription:
