@@ -29,6 +29,7 @@ This sample shows also how to disable the public network access from the interne
 - Azure Key Vault
 - Azure Cache for Redis
 - Azure SQL Database
+- Application Insights
 
 ## Deploy to Azure
 
