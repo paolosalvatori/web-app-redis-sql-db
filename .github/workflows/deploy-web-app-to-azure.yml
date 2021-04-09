@@ -1,4 +1,4 @@
-name: Build and deploy .NET Core app to Windows Web App RedisCachePrivateLink on Azure
+name: Build and deploy .NET Core app to a Windows Web App on Azure
 on:
   workflow_dispatch:
     paths:

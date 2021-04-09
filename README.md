@@ -10,6 +10,7 @@ Private endpoints are fully supported also by the Standard tier of [Azure Cache 
 This sample also shows  how to:
 
 - use a system-assigned managed identity to let the Web App access secrets from Azure Key Vault
+- deploy an ASP.NET Core application to an Azure App Service using a GitHub Actions workflow
 - disable the public network access from the internet to all the managed services used by the application:
 
   - Azure Blob Storage Account
@@ -335,9 +336,105 @@ deployTemplate \
     "$parameters"
 ```
 
-## Create the database
+## Create tables and stored procedures
 
-You can use the `ProductsDB` T-SQL script to create the database used by the companion application. You can proceed as follows:
+You can use the following `ProductsDB` T-SQL script to initialize the SQL database used by the ASP.NET Core application.
+
+```SQL
+IF OBJECT_ID('Products') > 0 DROP TABLE [Products]
+GO
+-- Create Products table
+CREATE TABLE [Products]
+(
+    [ProductID] [int] IDENTITY(1,1) NOT NULL ,
+    [Name] [nvarchar](50) NOT NULL ,
+    [Category] [nvarchar](50) NOT NULL ,
+    [Price] [smallmoney] NOT NULL
+        CONSTRAINT [PK_Products] PRIMARY KEY CLUSTERED 
+    (
+        [ProductID]
+    )
+)
+GO
+-- Create stored procedures
+IF OBJECT_ID('GetProduct') > 0 DROP PROCEDURE [GetProduct]
+GO
+CREATE PROCEDURE GetProduct
+    @ProductID int
+AS
+SELECT [ProductID], [Name], [Category], [Price]
+FROM [Products]
+WHERE [ProductID] = @ProductID
+GO
+IF OBJECT_ID('GetProducts') > 0 DROP PROCEDURE [GetProducts]
+GO
+CREATE PROCEDURE GetProducts
+AS
+SELECT [ProductID], [Name], [Category], [Price]
+FROM [Products] 
+GO
+IF OBJECT_ID('GetProductsByCategory') > 0 DROP PROCEDURE [GetProductsByCategory]
+GO
+CREATE PROCEDURE GetProductsByCategory
+    @Category [nvarchar](50)
+AS
+SELECT [ProductID], [Name], [Category], [Price]
+FROM [Products]
+WHERE [Category] = @Category
+GO
+IF OBJECT_ID('AddProduct') > 0 DROP PROCEDURE [AddProduct]
+GO
+CREATE PROCEDURE AddProduct
+    @ProductID int OUTPUT,
+    @Name [nvarchar](50),
+    @Category [nvarchar](50),
+    @Price [smallmoney]
+AS
+INSERT INTO Products
+VALUES
+    (@Name, @Category, @Price)
+SET @ProductID = @@IDENTITY
+GO
+IF OBJECT_ID('UpdateProduct') > 0 DROP PROCEDURE [UpdateProduct]
+GO
+CREATE PROCEDURE UpdateProduct
+    @ProductID int,
+    @Name [nvarchar](50),
+    @Category [nvarchar](50),
+    @Price [smallmoney]
+AS
+UPDATE Products 
+SET [Name] = @Name,
+    [Category] = @Category,
+    [Price] = @Price
+WHERE [ProductID] = @ProductID
+GO
+IF OBJECT_ID('DeleteProduct') > 0 DROP PROCEDURE [DeleteProduct]
+GO
+CREATE PROCEDURE DeleteProduct
+    @ProductID int
+AS
+DELETE [Products]
+WHERE [ProductID] = @ProductID
+GO
+-- Create test data
+SET NOCOUNT ON
+GO
+INSERT INTO Products
+VALUES
+    (N'Tomato soup', N'Groceries', 1.39)
+GO
+INSERT INTO Products
+VALUES
+    (N'Babo', N'Toys', 19.99)
+GO
+INSERT INTO Products
+VALUES
+    (N'Hammer', N'Hardware', 16.49)
+GO
+```
+
+You can proceed as follows to create the tables and stored procedure in the SQL database:
 
 - VPN into the jumpbox virtual machine using Azure Bastion as shown in the picture below
 - Open a browser and connect to the Azure Portal
@@ -347,7 +444,7 @@ You can use the `ProductsDB` T-SQL script to create the database used by the com
 
 ![Resources](images/bastion.png)
 
-## Deploy the code of the ASP.NET Core application
+## ASP.NET Core application
 
 This sample provides an ASP.NET Core single-page application (SPA) to test the topology. The application reads:
 
@@ -885,7 +982,7 @@ namespace Products.Controllers
 
 ## Deploy the code of the ASP.NET Core application
 
-Once the Azure resources have been deployed to Azure (which can take about 10-12 minutes), you need to deploy the ASP.NET Core web application contained in the `src` folder to the newly created Azure App Service. Azure App Service provides an Advanced Tool (Kudu) site that you can use to manage web app deployments. This site is accessed from a URL like: <WEB_APP_NAME>.scm.azurewebsites.net. You can use [Visual Studio Code](https://code.visualstudio.com/) or [Visual Studio](https://visualstudio.microsoft.com/) to deploy the code of the companion ASP.NET application to the Azure App Service created by the ARM template.
+Once the Azure resources have been deployed to Azure (which can take about 10-12 minutes), you need to deploy the ASP.NET Core web application contained in the `src` folder to the newly created Azure App Service. You can customize and use the `deploy-web-app-to-azure.yml` GitHub Actions workflow under the `.github\workflow` folder to deploy the application to Azure App Service. As an alternative, you can use [Visual Studio Code](https://code.visualstudio.com/) or [Visual Studio](https://visualstudio.microsoft.com/) to deploy the ASP.NET Core application to the Azure App Service created by the ARM template.
 
 ## Test the Application
 
