@@ -9,7 +9,7 @@ env:
   AZURE_WEBAPP_PUBLISH_PROFILE: ${{ secrets.RedisCachePrivateLink_f3dd }}
   CONFIGURATION: Release
   DOTNET_CORE_VERSION: 5.0.x
-  WORKING_DIRECTORY: ./src
+  WORKING_DIRECTORY: src
 jobs:
   build-and-deploy:
     runs-on: windows-latest
