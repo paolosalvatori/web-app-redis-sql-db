@@ -20,6 +20,9 @@
       "type": "string",
       "defaultValue": "P1v3",
       "allowedValues": [
+        "S1",
+        "S2",
+        "S3",
         "P1v2",
         "P2v2",
         "P3v2",
@@ -81,13 +84,6 @@
       ],
       "metadata": {
         "description": "Indicates the flow of the Application Insights ingestion. Possible values: LogAnalytics, ApplicationInsights, or ApplicationInsightsWithDiagnosticSettings."
-      }
-    },
-    "webAppContentStorageAccountName": {
-      "type": "string",
-      "defaultValue": "[concat('webapp', uniquestring(resourceGroup().id))]",
-      "metadata": {
-        "description": "Specifies the name of the storage account containing the application code."
       }
     },
     "vmDiagnosticStorageAccountName": {
@@ -757,7 +753,6 @@
     "keyVaultPrivateEndpointId": "[resourceId('Microsoft.Network/privateEndpoints', parameters('keyVaultPrivateEndpointName'))]",
 
     "vmDiagnosticStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('vmDiagnosticStorageAccountName'))]",
-    "webAppContentStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('webAppContentStorageAccountName'))]",
     "sqlServerId": "[resourceId('Microsoft.Sql/servers', toLower(parameters('sqlServerName')))]",
     "sqlServerDatabaseId": "[resourceId('Microsoft.Sql/servers/databases', parameters('sqlServerName'), parameters('sqlServerDatabaseName'))]",
     "redisCacheId": "[resourceId('Microsoft.Cache/Redis', toLower(parameters('redisCacheName')))]",
@@ -805,24 +800,6 @@
           "bypass": "AzureServices"
         },
         "allowBlobPublicAccess": "[parameters('allowBlobPublicAccess')]",
-        "supportsHttpsTrafficOnly": "[parameters('supportsHttpsTrafficOnly')]"
-      }
-    },
-    {
-      "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2019-06-01",
-      "location": "[parameters('location')]",
-      "name": "[parameters('webAppContentStorageAccountName')]",
-      "sku": {
-        "name": "Standard_LRS",
-        "tier": "Standard"
-      },
-      "kind": "StorageV2",
-      "properties": {
-        "networkAcls": {
-          "bypass": "AzureServices",
-          "defaultAction": "Allow"
-        },
         "supportsHttpsTrafficOnly": "[parameters('supportsHttpsTrafficOnly')]"
       }
     },
@@ -1858,7 +1835,6 @@
       "location": "[parameters('location')]",
       "dependsOn": [
         "[variables('hostingPlanId')]",
-        "[variables('webAppContentStorageAccountId')]",
         "[variables('vnetId')]"
       ],
       "tags": {
@@ -1881,14 +1857,6 @@
             {
               "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
               "value": "[concat('InstrumentationKey=', reference(variables('applicationInsightsId'), '2020-02-02-preview').instrumentationKey)]"
-            },
-            {
-              "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',parameters('webAppContentStorageAccountName'),';AccountKey=',listkeys(variables('webAppContentStorageAccountId'), '2019-06-01').keys[0].value,';')]"
-            },
-            {
-              "name": "WEBSITE_CONTENTSHARE",
-              "value": "[toLower(parameters('hostingPlanName'))]"
             },
             {
               "name": "WEBSITE_VNET_ROUTE_ALL",

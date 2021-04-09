@@ -1,12 +1,19 @@
 ---
-products: azure,  aspnet, azure-application-insights, azure-app-service, azure-blob-storage, azure-storage-accounts, azure-sql, azure-cache-for-redis, azure-database, azure-functions, azure-log-analytics, azure-nat-gateway, azure-virtual-machines, vs-code
+products: azure,  aspnet, azure-application-insights, azure-app-service, azure-blob-storage, azure-storage-accounts, azure-sql, azure-cache-for-redis, azure-database, azure-web-app, azure-log-analytics, azure-nat-gateway, azure-virtual-machines, vs-code
 ---
 
 # How to configure a Web App to call Azure Cache for Redis and Azure SQL Database via Private Endpoints
 
-This sample shows how to configure a Web App running in an [Azure App Service](https://docs.microsoft.com/en-us/azure/app-service/) an [HTTP-triggered Azure Web App](https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-http-webhook-trigger?tabs=csharp) to access [Azure Cache for Redis](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-overview) and [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview) using [Azure Private Endpoints](https://docs.microsoft.com/azure/private-link/private-endpoint-overview). The Azure Web Apps app is hosted in [Azure Web Apps Premium Plan](https://docs.microsoft.com/en-us/azure/azure-functions/functions-premium-plan?tabs=portal) with [Regional VNET Integration](https://docs.microsoft.com/en-us/azure/app-service/web-sites-integrate-with-vnet#regional-vnet-integration).
-Private endpoints are fully supported also by the Standard tier of Azure Cache for Redis. However, to use private endpoints, an Azure Cache for Redis instance needs to have been created after July 28th, 2020. Currently, geo-replication, firewall rules, portal console support, multiple endpoints per clustered cache, persistence to firewall and VNet injected caches is not supported.
-As an alternative solution, this sample also shows how to deploy Premium Azure Cache for Redis in a virtual neytwork. When an Azure Cache for Redis instance is configured with a virtual network is not publicly addressable and can only be accessed from virtual machines and applications within the virtual network or a peered virtual network.
+This sample shows how to deploy an infrastructure and network topology on Azure where an ASP.NET Core web application hosted by an [Azure App Service](https://docs.microsoft.com/en-us/azure/app-service/) accesses data from [Azure Cache for Redis](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-overview) and [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview) using [Azure Private Endpoints](https://docs.microsoft.com/azure/private-link/private-endpoint-overview). The Azure Web App is hosted in a [Standard, Premium, PremiumV2, PremiumV3](https://docs.microsoft.com/en-us/azure/app-service/overview-hosting-plans) with [Regional VNET Integration](https://docs.microsoft.com/en-us/azure/app-service/web-sites-integrate-with-vnet#regional-vnet-integration).
+Private endpoints are fully supported also by the Standard tier of [Azure Cache for Redis](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-private-link). However, to use private endpoints, an Azure Cache for Redis instance needs to have been created after July 28th, 2020. Currently, zone redundancy, portal console support, and persistence to firewall storage accounts are not supported. In addition, this sample shows  how to disable the public network access from the internet to all the managed services used by the application:
+
+- Azure Blob Storage Account
+- Azure Key Vault
+- Azure Cache for Redis
+- Azure SQL Database
+- Azure Application Insights
+
+As an alternative solution, this sample also shows how to deploy Premium Azure Cache for Redis in a virtual network. When an Azure Cache for Redis instance is configured with a virtual network, it isn't publicly addressable and can only be accessed from virtual machines and applications within the virtual network.
 
 For more information, see:
 
@@ -15,21 +22,10 @@ For more information, see:
 - [Azure Cache for Redis with Azure Private Link](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-private-link)
 - [Configure virtual network support for a Premium Azure Cache for Redis instance](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-how-to-premium-vnet)
 
-In addition, Azure Web Apps and Http-triggered Azure Web Apps can be configured to be called via a private IP address by applications located in the same virtual network, or in a peered network, or on-premises via ExpressRoute or a S2S VPN. For more information, see:
+In addition, Azure Web Apps can be configured to be called via a private IP address by applications located in the same virtual network, or in a peered network, or on-premises via ExpressRoute or a S2S VPN. For more information, see:
 
 - [Using Private Endpoints for Azure Web App](https://docs.microsoft.com/en-us/azure/app-service/networking/private-endpoint).
 - [Create an App Service app and deploy a private endpoint by using an Azure Resource Manager template](https://docs.microsoft.com/en-us/azure/app-service/scripts/template-deploy-private-endpoint).
-- [Call an HTTP Azure Web App using a Private Endpoint](https://github.com/paolosalvatori/azure-functions-private-endpoint-http-trigger)
-
-For a similar sample with a non-HTTP-triggered Azure Web App, see [Azure Web Apps, Private Endpoints, and NAT Gateway](https://github.com/paolosalvatori/azure-function-premium-plan).
-
-This sample shows also how to disable the public network access from the internet to all the managed services used by the application:
-
-- Azure Blob Storage Account
-- Azure Key Vault
-- Azure Cache for Redis
-- Azure SQL Database
-- Azure Application Insights
 
 ## Deploy to Azure
 
@@ -61,10 +57,9 @@ The ARM template deploys the following resources:
 - A Public IP for Azure Bastion
 - Azure Bastion is used to access the jumpbox virtual machine from the Azure Portal via RDP. For more information, see [What is Azure Bastion?](https://docs.microsoft.com/en-us/azure/bastion/bastion-overview).
 - An ADLS Gen 2 storage account used to store the boot diagnostics logs of the virtual machine as blobs
-- An ADLS Gen 2 storage account where the code and configuration of the Azure Web App are stored. For more information, see [WEBSITE_CONTENTAZUREFILECONNECTIONSTRING](https://docs.microsoft.com/it-it/azure/azure-functions/functions-app-settings#website_contentazurefileconnectionstring).
-- An Premium App Service Plan hosting the Azure Web App app. For more information, see [Azure App Service plan overview](https://docs.microsoft.com/en-us/azure/app-service/overview-hosting-plans).
-- An Azure App Service containing an ASP.NET Core application that uses a system-assigned managed identity to read settings from Key vault, stores data in [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview), and caches items in Azure Cache for Redis.
-- An Application Insights resource used by the Azure Web Apps app to store logs, traces, requests, exceptions, and metrics. For more information, see [Monitor Azure Web Apps](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring).
+- A [Standard, Premium, PremiumV2, PremiumV3](https://docs.microsoft.com/en-us/azure/app-service/overview-hosting-plans) hosting plan that supports [Regional VNET Integration](https://docs.microsoft.com/en-us/azure/app-service/web-sites-integrate-with-vnet#regional-vnet-integration)
+- An Azure App Service containing an ASP.NET Core application that uses a system-assigned managed identity to read settings from Key vault. The web site is a single page application that stores data in [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview) and caches items in Azure Cache for Redis.
+- An Application Insights resource used by the Azure Web Apps app to store logs, traces, requests, exceptions, and metrics. For more information, see [Web application monitoring on Azure](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/app-service-web-app/app-monitoring).
 - An Azure SQL Server and [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview) hosting the ProductDB relational database used by the Web App.
 - An Azure Key Vault used to store the following application settings. These settings are automtically created by the ARM template as secrets in Azure Key Vault:
 
@@ -101,13 +96,11 @@ The ARM template deploys the following resources:
   - **RedisCacheSubnet**: hosts the Premium Azure Cache for Redis
 - Network Security Group: this resource contains an inbound rule to allow access to the jumpbox virtual machine on port 3389 (RDP)
 - A Windows 10 virtual machine. This virtual machine can be used as jumpbox virtual machine to simulate a real application and send requests to the Azure Web Apps exposed via [Azure Private Link](https://docs.microsoft.com/en-us/azure/private-link/private-link-overview).
-- A Public IP for Azure Bastion
 - Azure Bastion is used to access the jumpbox virtual machine from the Azure Portal via RDP. For more information, see [What is Azure Bastion?](https://docs.microsoft.com/en-us/azure/bastion/bastion-overview).
 - An ADLS Gen 2 storage account used to store the boot diagnostics logs of the virtual machine as blobs
-- An ADLS Gen 2 storage account where the code and configuration of the Azure Web App are stored. For more information, see [WEBSITE_CONTENTAZUREFILECONNECTIONSTRING](https://docs.microsoft.com/it-it/azure/azure-functions/functions-app-settings#website_contentazurefileconnectionstring).
-- An Premium App Service Plan hosting the Azure Web App app. For more information, see [Azure App Service plan overview](https://docs.microsoft.com/en-us/azure/app-service/overview-hosting-plans).
-- An Azure App Service containing an ASP.NET Core application that uses a system-assigned managed identity to read settings from Key vault, stores data in [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview), and caches items in Azure Cache for Redis.
-- An Application Insights resource used by the Azure Web Apps app to store logs, traces, requests, exceptions, and metrics. For more information, see [Monitor Azure Web Apps](https://docs.microsoft.com/en-us/azure/azure-functions/functions-monitoring).
+- A [Standard, Premium, PremiumV2, PremiumV3](https://docs.microsoft.com/en-us/azure/app-service/overview-hosting-plans) hosting plan that supports [Regional VNET Integration](https://docs.microsoft.com/en-us/azure/app-service/web-sites-integrate-with-vnet#regional-vnet-integration)
+- An Azure App Service containing an ASP.NET Core application that uses a system-assigned managed identity to read settings from Key vault. The web site is a single page application that stores data in [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview) and caches items in Azure Cache for Redis.
+- An Application Insights resource used by the Azure Web Apps app to store logs, traces, requests, exceptions, and metrics. For more information, see [Web application monitoring on Azure](https://docs.microsoft.com/en-us/azure/architecture/reference-architectures/app-service-web-app/app-monitoring).
 - An Azure SQL Server and [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview) hosting the ProductDB relational database used by the Web App.
 - An Azure Key Vault used to store the following application settings. These settings are automtically created by the ARM template as secrets in Azure Key Vault:
 

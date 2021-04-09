@@ -3,19 +3,19 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "webAppName": {
-      "value": "WebAppRedisCacheInVnetSqlDb"
+      "value": "RedisCacheInVnetDb"
     },
     "hostingPlanName": {
-      "value": "WebAppRedisCacheInVnetSqlDbServicePlan"
+      "value": "RedisCacheInVnetDbServicePlan"
     },
     "workspaceName": {
-      "value": "WebAppRedisCacheInVnetSqlDbLogAnalytics"
+      "value": "RedisCacheInVnetDbLogAnalytics"
     },
     "workspaceSku": {
       "value": "PerGB2018"
     },
     "virtualNetworkName": {
-      "value": "WebAppRedisCacheInVnetSqlDbVNet"
+      "value": "RedisCacheInVnetDbVNet"
     },
     "virtualNetworkAddressPrefix": {
       "value": "10.0.0.0/16"
@@ -92,7 +92,7 @@
       "value": "ReadWrite"
     },
     "sqlServerName": {
-      "value": "WebAppRedisCacheInVnetSqlDb"
+      "value": "RedisCacheInVnetDb"
     },
     "sqlServerAdministratorName": {
       "value": "Paolos"
@@ -104,10 +104,10 @@
       "value": "ProductsDB"
     },
     "redisCacheName": {
-      "value": "ProductsDBRedisCacheInVnet"
+      "value": "ProductsDBRedisInVnet"
     },
     "keyVaultName": {
-      "value": "WebAppRedisCacheInVnetSqlDbKeyVault"
+      "value": "RedisCacheInVnetKeyVault"
     }
   }
 }
