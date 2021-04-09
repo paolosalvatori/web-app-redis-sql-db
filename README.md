@@ -5,7 +5,9 @@ products: azure,  aspnet, azure-application-insights, azure-app-service, azure-b
 # How to configure a Web App to call Azure Cache for Redis and Azure SQL Database via Private Endpoints
 
 This sample shows how to deploy an infrastructure and network topology on Azure where an ASP.NET Core web application hosted by an [Azure App Service](https://docs.microsoft.com/en-us/azure/app-service/) accesses data from [Azure Cache for Redis](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-overview) and [Azure SQL Database](https://docs.microsoft.com/en-us/azure/azure-sql/database/sql-database-paas-overview) using [Azure Private Endpoints](https://docs.microsoft.com/azure/private-link/private-endpoint-overview). The Azure Web App is hosted in a [Standard, Premium, PremiumV2, PremiumV3](https://docs.microsoft.com/en-us/azure/app-service/overview-hosting-plans) with [Regional VNET Integration](https://docs.microsoft.com/en-us/azure/app-service/web-sites-integrate-with-vnet#regional-vnet-integration).
-Private endpoints are fully supported also by the Standard tier of [Azure Cache for Redis](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-private-link). However, to use private endpoints, an Azure Cache for Redis instance needs to have been created after July 28th, 2020. Currently, zone redundancy, portal console support, and persistence to firewall storage accounts are not supported. In addition, this sample shows  how to:
+Private endpoints are fully supported also by the Standard tier of [Azure Cache for Redis](https://docs.microsoft.com/en-us/azure/azure-cache-for-redis/cache-private-link). However, to use private endpoints, an Azure Cache for Redis instance needs to have been created after July 28th, 2020. Currently, zone redundancy, portal console support, and persistence to firewall storage accounts are not supported.
+
+This sample also shows  how to:
 
 - use a system-assigned managed identity to let the Web App access secrets from Azure Key Vault
 - disable the public network access from the internet to all the managed services used by the application:
