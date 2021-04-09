@@ -1,8 +1,23 @@
 name: Build and deploy .NET Core app to Windows Web App RedisCachePrivateLink on Azure
 on:
+  workflow_dispatch:
+    paths:
+    - 'src/**'
+    inputs:
+      name:
+        description: 'Name of the user that manually starts the workflow'
+        required: true
+        default: 'Paolo Salvatori'
   push:
+    paths:
+    - 'src/**'
     branches:
     - master
+  pull_request:
+    paths:
+    - 'src/**'
+    branches:
+      - main
 env:
   AZURE_WEBAPP_NAME: RedisCachePrivateLink
   AZURE_WEBAPP_PACKAGE_PATH: ./publish
