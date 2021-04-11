@@ -48,7 +48,7 @@ h2 { text-transform: uppercase; font-weight: normal; color: white; font-size: 20
     padding: 0;
 }
 #add-product button { float: right; margin-top: 10px; padding: 0 10px; height: 24px; border-radius: 4px; }
-#add-product input { width: 610px; height: 24px; border: 1px solid #DDDDDD; font-size: 1em; border-radius: 4px; margin-left: 10px;}
+#add-product input { width: 510px; height: 24px; border: 1px solid #DDDDDD; font-size: 1em; border-radius: 4px; margin-left: 10px;}
 #add-product-headline {
     font-family: Arial, Helvetica;
     margin-top: 5px;
@@ -57,7 +57,7 @@ h2 { text-transform: uppercase; font-weight: normal; color: white; font-size: 20
     font-size: 13px;
 }
 
-#refresh-products {width: 710px;margin: auto}
+#refresh-products {width: 610px;margin: auto}
 
 #refresh-products button { 
     float: right; 
@@ -88,7 +88,7 @@ footer a { color: #666; display: block; }
 	margin: auto;
 	text-align: left;
 	border-collapse: collapse;
-    width: 710px;
+    width: 610px;
 }
 
 #products
@@ -98,7 +98,7 @@ footer a { color: #666; display: block; }
 	margin: auto;
 	text-align: left;
 	border-collapse: collapse;
-    width: 710px;
+    width: 610px;
 }
 #products thead th.rounded-upper-left
 {
@@ -160,9 +160,10 @@ footer a { color: #666; display: block; }
 .far-clouds { background: transparent url(../images/far-clouds.png) 305px 102px repeat-x; }
 .near-clouds { background: transparent url(../images/near-clouds.png) 305px 300px repeat-x; }
 .mainContent {
-    position: relative;
     z-index: 101;
-    width: 750px;
+    width: 650px;
+    position: relative;
+    transform: translateX(12%)
 }
 
 .container  {

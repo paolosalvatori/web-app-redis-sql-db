@@ -20,12 +20,12 @@
             success: function (data) {
                 if (Array.isArray(data) && data.length > 0) {
                     var products = $.map(data, function (product) {
-                        return $('<tr>').append($('<td><input class="product-text" style="width: 70px" value="' + product.productId + '"/></td>'))
-                            .append($('<td><input class="product-text" value="' + product.name + '"/></td>'))
-                            .append($('<td><input class="product-text" value="' + product.category + '"/></td>'))
-                            .append($('<td><input class="product-text" style="width: 100px" value="' + parseFloat(product.price).toFixed(2) + '"/></td>'))
-                            .append($('<td><button class="button-update" style="width: 70px" >Update</button></td>'))
-                            .append($('<td><button class="button-delete" style="width: 70px" >Delete</button></td>')).append('</tr>');
+                        return $('<tr>').append($('<td style="width: 50px"><input class="product-text" value="' + product.productId + '"/></td>'))
+                            .append($('<td style="width: 125px"><input class="product-text" value="' + product.name + '"/></td>'))
+                            .append($('<td style="width: 125px"><input class="product-text" value="' + product.category + '"/></td>'))
+                            .append($('<td style="width: 70px"><input class="product-text" value="' + parseFloat(product.price).toFixed(2) + '"/></td>'))
+                            .append($('<td style="width: 70px"><button class="button-update">Update</button></td>'))
+                            .append($('<td style="width: 70px"><button class="button-delete">Delete</button></td>')).append('</tr>');
                     });
                     $('#products > tbody').empty().append(products).toggle(products.length > 0);
                     $('#summary').html('<strong>' + products.length + '</strong> product(s) successfully retrieved.');
@@ -86,12 +86,12 @@
             contentType: 'application/json; charset=utf-8',
             success: function (data) {
                 if (data) {
-                    var row = $('<tr>').append($('<td><input class="product-text" value="' + data.productId + '"/></td>'))
-                        .append($('<td><input class="product-text" value="' + data.name + '"/></td>'))
-                        .append($('<td><input class="product-text" value="' + data.category + '"/></td>'))
-                        .append($('<td><input class="product-text" value="' + data.price + '"/></td>'))
-                        .append($('<td><button class="button-update">Update</button></td>'))
-                        .append($('<td><button class="button-delete">Delete</button></td>')).append('</tr>');
+                    var row = $('<tr>').append($('<td style="width: 50px"><input class="product-text" value="' + data.productId + '"/></td>'))
+                        .append($('<td style="width: 125px"><input class="product-text" value="' + data.name + '"/></td>'))
+                        .append($('<td style="width: 125px"><input class="product-text" value="' + data.category + '"/></td>'))
+                        .append($('<td style="width: 70px"><input class="product-text" value="' + data.price + '"/></td>'))
+                        .append($('<td style="width: 70px"><button class="button-update">Update</button></td>'))
+                        .append($('<td style="width: 70px"><button class="button-delete">Delete</button></td>')).append('</tr>');
                     $('#products > tbody').append(row).toggle(true);
                     $('#summary').html('<strong>' + data.name + '</strong> successfully added.');
                 }
