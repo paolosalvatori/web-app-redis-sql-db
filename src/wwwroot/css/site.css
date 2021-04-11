@@ -159,10 +159,12 @@ footer a { color: #666; display: block; }
 }
 .far-clouds { background: transparent url(../images/far-clouds.png) 305px 102px repeat-x; }
 .near-clouds { background: transparent url(../images/near-clouds.png) 305px 300px repeat-x; }
-.mainContent{
+.mainContent {
     position: relative;
     z-index: 101;
+    width: 750px;
 }
+
 .container  {
 	min-width:900px;
 	padding-top:359px;
