@@ -18,10 +18,12 @@ using System.Data;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.ApplicationInsights;
 using StackExchange.Redis;
 using Products.Models;
 using Products.Properties;
@@ -39,15 +41,18 @@ namespace Products.Controllers
         private readonly ILogger<ProductsController> logger;
         private readonly ProductsContext context;
         private readonly IDatabase database;
+        private readonly TelemetryClient telemetryClient;
         #endregion
 
         #region Public Constructors
         public ProductsController(ILogger<ProductsController> logger,
                                   ProductsContext context,
+                                  TelemetryClient telemetryClient,
                                   IConnectionMultiplexer connectionMultiplexer)
         {
             this.logger = logger;
             this.context = context;
+            this.telemetryClient = telemetryClient;
             database = connectionMultiplexer.GetDatabase();
         }
         #endregion
@@ -68,8 +73,19 @@ namespace Products.Controllers
             {
                 stopwatch.Start();
                 logger.LogInformation("Listing all products...");
-                var values = await database.SetMembersAsync(Resources.RedisKeys);
-                var items = await database.GetAsync<Product>(values.Select(v => (string)v).ToArray());
+                var startTime = DateTime.UtcNow;
+                var timer = Stopwatch.StartNew();
+                IEnumerable<Product> items;
+                try
+                {
+                    var values = await database.SetMembersAsync(Resources.RedisKeys);
+                    items = await database.GetAsync<Product>(values.Select(v => (string)v).ToArray());
+                }
+                finally
+                {
+                    timer.Stop();
+                    telemetryClient.TrackDependency("Redis", "RedisCluster", $"GET: All", startTime, timer.Elapsed, true);
+                }
                 if (items.Any())
                 {
                     var list = items.ToList();
@@ -89,12 +105,15 @@ namespace Products.Controllers
             {
                 var errorMessage = MessageHelper.FormatException(ex);
                 logger.LogError(errorMessage);
+                telemetryClient.TrackException(ex);
                 return StatusCode(400, new { error = errorMessage });
             }
             finally
             {
                 stopwatch.Stop();
-                logger.LogInformation($"GetAllProductsAsync method completed in {stopwatch.ElapsedMilliseconds} ms.");
+                var message = $"GetAllProductsAsync method completed in {stopwatch.ElapsedMilliseconds} ms.";
+                logger.LogInformation(message);
+                telemetryClient.TrackEvent(message);
             }
         }
 
@@ -116,12 +135,22 @@ namespace Products.Controllers
             {
                 stopwatch.Start();
                 logger.LogInformation($"Getting product {id}...");
-                var product = await database.GetAsync<Product>(id.ToString());
+                var startTime = DateTime.UtcNow;
+                var timer = Stopwatch.StartNew();
+                Product product;
+                try
+                {
+                    product = await database.GetAsync<Product>(id.ToString());
+                }
+                finally
+                {
+                    timer.Stop();
+                    telemetryClient.TrackDependency("Redis", "RedisCluster", $"GET: {id}", startTime, timer.Elapsed, true);
+                }
                 if (product != null)
                 {
                     return new OkObjectResult(product);
                 }
-
                 var products = context.Products.FromSqlRaw(Resources.GetProduct, new SqlParameter
                 {
                     ParameterName = "@ProductID",
@@ -149,12 +178,15 @@ namespace Products.Controllers
             {
                 var errorMessage = MessageHelper.FormatException(ex);
                 logger.LogError(errorMessage);
+                telemetryClient.TrackException(ex);
                 return StatusCode(400, new { error = errorMessage });
             }
             finally
             {
                 stopwatch.Stop();
-                logger.LogInformation($"GetProductByIdAsync method completed in {stopwatch.ElapsedMilliseconds} ms.");
+                var message = $"GetProductByIdAsync method completed in {stopwatch.ElapsedMilliseconds} ms.";
+                logger.LogInformation(message);
+                telemetryClient.TrackEvent(message);
             }
         }
 
@@ -220,9 +252,18 @@ namespace Products.Controllers
                 {
                     product.ProductId = (int)productIdParameter.Value;
                     var idAsString = product.ProductId.ToString(CultureInfo.InvariantCulture);
-                    await database.SetAsync(idAsString, product);
-                    await database.SetAddAsync(Resources.RedisKeys, idAsString);
-                    
+                    var startTime = DateTime.UtcNow;
+                    var timer = Stopwatch.StartNew();
+                    try
+                    {
+                        await database.SetAsync(idAsString, product);
+                        await database.SetAddAsync(Resources.RedisKeys, idAsString);
+                    }
+                    finally
+                    {
+                        timer.Stop();
+                        telemetryClient.TrackDependency("Redis", "RedisCluster", $"POST: {idAsString}", startTime, timer.Elapsed, true);
+                    }
                     logger.LogInformation($"Product with id = {product.ProductId} has been successfully created.");
                     return CreatedAtRoute("GetProductByIdAsync", new { id = product.ProductId }, product);
                 }
@@ -232,12 +273,15 @@ namespace Products.Controllers
             {
                 var errorMessage = MessageHelper.FormatException(ex);
                 logger.LogError(errorMessage);
+                telemetryClient.TrackException(ex);
                 return StatusCode(400, new { error = errorMessage });
             }
             finally
             {
                 stopwatch.Stop();
-                logger.LogInformation($"CreateProductAsync method completed in {stopwatch.ElapsedMilliseconds} ms.");
+                var message = $"CreateProductAsync method completed in {stopwatch.ElapsedMilliseconds} ms.";
+                logger.LogInformation(message);
+                telemetryClient.TrackEvent(message);
             }
         }
 
@@ -301,9 +345,18 @@ namespace Products.Controllers
                 if (result == 1)
                 {
                     var idAsString = id.ToString(CultureInfo.InvariantCulture);
-                    await database.SetAsync(idAsString, product);
-                    await database.SetAddAsync(Resources.RedisKeys, idAsString);
-
+                    var startTime = DateTime.UtcNow;
+                    var timer = Stopwatch.StartNew();
+                    try
+                    {
+                        await database.SetAsync(idAsString, product);
+                        await database.SetAddAsync(Resources.RedisKeys, idAsString);
+                    }
+                    finally
+                    {
+                        timer.Stop();
+                        telemetryClient.TrackDependency("Redis", "RedisCluster", $"PUT: {idAsString}", startTime, timer.Elapsed, true);
+                    }
                     logger.LogInformation("Product with id = {ID} has been successfully updated.", product.ProductId);
                 }
                 return new NoContentResult();
@@ -312,12 +365,15 @@ namespace Products.Controllers
             {
                 var errorMessage = MessageHelper.FormatException(ex);
                 logger.LogError(errorMessage);
+                telemetryClient.TrackException(ex);
                 return StatusCode(400, new { error = errorMessage });
             }
             finally
             {
                 stopwatch.Stop();
-                logger.LogInformation($"Update method completed in {stopwatch.ElapsedMilliseconds} ms.");
+                var message = $"Update method completed in {stopwatch.ElapsedMilliseconds} ms.";
+                logger.LogInformation(message);
+                telemetryClient.TrackEvent(message);
             }
         }
 
@@ -352,9 +408,18 @@ namespace Products.Controllers
                 if (result == 1)
                 {
                     var idAsString = id.ToString(CultureInfo.InvariantCulture);
-                    await database.KeyDeleteAsync(idAsString);
-                    await database.SetRemoveAsync(Resources.RedisKeys, idAsString);
-
+                    var startTime = DateTime.UtcNow;
+                    var timer = Stopwatch.StartNew();
+                    try
+                    {
+                        await database.KeyDeleteAsync(idAsString);
+                        await database.SetRemoveAsync(Resources.RedisKeys, idAsString);
+                    }
+                    finally
+                    {
+                        timer.Stop();
+                        telemetryClient.TrackDependency("Redis", "RedisCluster", $"DELETE: {idAsString}", startTime, timer.Elapsed, true);
+                    }
                     logger.LogInformation("Product with id = {ID} has been successfully deleted.", id);
                 }
                 return new NoContentResult();
@@ -363,12 +428,15 @@ namespace Products.Controllers
             {
                 var errorMessage = MessageHelper.FormatException(ex);
                 logger.LogError(errorMessage);
+                telemetryClient.TrackException(ex);
                 return StatusCode(400, new { error = errorMessage });
             }
             finally
             {
                 stopwatch.Stop();
-                logger.LogInformation($"Delete method completed in {stopwatch.ElapsedMilliseconds} ms.");
+                var message = $"Delete method completed in {stopwatch.ElapsedMilliseconds} ms.";
+                logger.LogInformation(message);
+                telemetryClient.TrackEvent(message);
             }
         }
         #endregion
