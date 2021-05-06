@@ -51,7 +51,7 @@ namespace Products
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
-            services.AddApplicationInsightsTelemetry(Configuration[Resources.ApplicationInsightsConnectionString]);
+            services.AddApplicationInsightsTelemetry();
             services.AddOptions();
             services.AddMvc();
             services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(Configuration.GetConnectionString(Resources.RedisCacheConnectionString)));

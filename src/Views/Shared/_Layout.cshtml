@@ -1,12 +1,13 @@
 ﻿<!DOCTYPE html>
 <html>
-    <head>
-        <meta charset='utf-8' />
-        <title>Products</title>
-        <link rel='stylesheet' href='@Url.Content("~/css/site.css")' />
-        <meta name='viewport' content='width=device-width' />
-        <!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.1/html5shiv.js"></script><![endif]-->
-    </head>
+<head>
+    <meta charset='utf-8' />
+    <title>Products</title>
+    <link rel='stylesheet' href='@Url.Content("~/css/site.css")' />
+    <meta name='viewport' content='width=device-width' />
+    <!--[if lt IE 9]><script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.6.1/html5shiv.js"></script><![endif]-->
+    @Html.Raw(JavaScriptSnippet.FullScript)
+</head>
     <body>
         @RenderBody()
     </body>
